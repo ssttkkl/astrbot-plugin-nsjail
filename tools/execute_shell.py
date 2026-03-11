@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ExecuteShellTool(FunctionTool):
     name: str = "execute_shell"
-    description: str = "在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱，文件系统隔离，资源受限。"
+    description: str = "在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱,文件系统隔离,资源受限。"
     parameters: dict = field(
         default_factory=lambda: {
             "type": "object",
@@ -17,7 +17,7 @@ class ExecuteShellTool(FunctionTool):
                 },
                 "timeout": {
                     "type": "number",
-                    "description": "超时时间（秒），默认30秒",
+                    "description": "超时时间(秒),默认30秒",
                 },
             },
             "required": ["command"],
@@ -30,6 +30,6 @@ class ExecuteShellTool(FunctionTool):
         if not self.plugin_instance:
             return "插件未正确初始化"
 
-        session_id = event.unified_msg_origin
+        session_id = event.session_id or "default"
         output, code = await self.plugin_instance.execute_in_sandbox(session_id, command, timeout)
         return f"$ {command}\n{output}\n退出码: {code}"
