@@ -124,12 +124,16 @@ class NsjailPlugin(Star):
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
-            "--chroot", "/nsjail-root",
             "--user", "99999",
             "--group", "99999",
             "--disable_clone_newuser",
             "--disable_clone_newnet",
             "--bindmount", f"{sandbox_dir}:/workspace:rw",
+            "--bindmount", "/usr:/usr:ro",
+            "--bindmount", "/lib:/lib:ro",
+            "--bindmount", "/lib64:/lib64:ro",
+            "--bindmount", "/bin:/bin:ro",
+            "--bindmount", "/sbin:/sbin:ro",
             
         ]
         
