@@ -1,0 +1,14 @@
+{
+  "max_timeout": {
+    "description": "最大超时时间（秒）",
+    "type": "int",
+    "default": 60,
+    "hint": "工具执行的最大超时时间，工具参数指定的超时不能超过此值"
+  },
+  "enable_network": {
+    "description": "是否允许沙箱访问网络",
+    "type": "bool",
+    "default": false,
+    "hint": "默认禁用网络以保证安全。开启后沙箱可以访问外部网络"
+  }
+}

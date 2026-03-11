@@ -1,0 +1,10 @@
+name: "nsjail"
+display_name: "NsJail 沙箱执行"
+author: "ssttkkl"
+desc: "在 NsJail 沙箱中安全执行 shell 命令，每个会话独立沙箱"
+version: "1.0.0"
+repo: "https://github.com/ssttkkl/astrbot-plugin-nsjail"
+support_platforms:
+  - aiocqhttp
+  - telegram
+astrbot_version: ">=4.16,<5"

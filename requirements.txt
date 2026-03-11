@@ -1,0 +1,2 @@
+# NsJail 需要系统安装，不是 Python 包
+# 安装方法: apt-get install nsjail (Debian/Ubuntu)
