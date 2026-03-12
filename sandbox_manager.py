@@ -107,6 +107,7 @@ class SandboxManager:
             "--bindmount", "/lib64:/lib64:ro",
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
+            "--bindmount", "/tmp:/tmp:rw",
         ]
         
         # 网络配置：默认隔离，配置启用时才共享宿主网络
