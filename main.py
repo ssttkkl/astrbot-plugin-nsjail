@@ -6,7 +6,10 @@ import shutil
 import json
 import hashlib
 from astrbot.api.star import Context, Star
+from astrbot.api.event import filter
 from astrbot.api import logger, AstrBotConfig
+from astrbot.api.event import AstrMessageEvent
+from astrbot.core.message.message_event_result import MessageChain
 from .tools.execute_shell import ExecuteShellTool
 
 class SandboxManager:
@@ -94,6 +97,25 @@ class NsjailPlugin(Star):
         tool = ExecuteShellTool()
         tool.plugin_instance = self
         self.context.add_llm_tools(tool)
+    
+    @filter.command("nsjail")
+    async def handle_nsjail_command(self, event: AstrMessageEvent):
+        """处理 /nsjail 命令"""
+        command = event.message_str.strip()
+        
+        if not command:
+            yield event.plain_result("用法: /nsjail <命令>")
+            return
+        
+        if len(command) > 1000:
+            yield event.plain_result("命令过长（最大 1000 字符）")
+            return
+        
+        session_id = event.session_id or "default"
+        output, returncode = await self.execute_in_sandbox(session_id, command)
+        
+        response = f"退出码: {returncode}\n输出:\n{output}"
+        yield event.plain_result(response[:2000])
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30) -> tuple[str, int]:
         timeout = min(timeout, self.max_timeout)
