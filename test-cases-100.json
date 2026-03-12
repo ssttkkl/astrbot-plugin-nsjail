@@ -1,0 +1,602 @@
+[
+  {
+    "name": "基础echo",
+    "command": "/nsjail echo hello",
+    "expected": "hello",
+    "category": "基础"
+  },
+  {
+    "name": "数学计算-加法",
+    "command": "/nsjail expr 100 + 200",
+    "expected": "300",
+    "category": "计算"
+  },
+  {
+    "name": "数学计算-乘法",
+    "command": "/nsjail expr 25 \\* 4",
+    "expected": "100",
+    "category": "计算"
+  },
+  {
+    "name": "Python计算",
+    "command": "/nsjail python3 -c 'print(2**10)'",
+    "expected": "1024",
+    "category": "Python"
+  },
+  {
+    "name": "Python JSON",
+    "command": "/nsjail python3 -c 'import json; print(json.dumps({\"a\":1}))'",
+    "expected": "{\"a\": 1}",
+    "category": "Python"
+  },
+  {
+    "name": "Python列表",
+    "command": "/nsjail python3 -c 'print([x*2 for x in range(5)])'",
+    "expected": "[0, 2, 4, 6, 8]",
+    "category": "Python"
+  },
+  {
+    "name": "Node版本",
+    "command": "/nsjail node --version",
+    "expected": "v",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node计算",
+    "command": "/nsjail node -e 'console.log(Math.pow(2,10))'",
+    "expected": "1024",
+    "category": "Node.js"
+  },
+  {
+    "name": "当前目录",
+    "command": "/nsjail pwd",
+    "expected": "/workspace",
+    "category": "基础"
+  },
+  {
+    "name": "环境变量",
+    "command": "/nsjail echo $PWD",
+    "expected": "/workspace",
+    "category": "基础"
+  },
+  {
+    "name": "创建目录",
+    "command": "/nsjail mkdir test && ls",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "写入文件",
+    "command": "/nsjail echo 'data' > file.txt && cat file.txt",
+    "expected": "data",
+    "category": "文件"
+  },
+  {
+    "name": "追加文件",
+    "command": "/nsjail echo 'a' > f.txt && echo 'b' >> f.txt && cat f.txt",
+    "expected": "b",
+    "category": "文件"
+  },
+  {
+    "name": "文件权限",
+    "command": "/nsjail touch f && chmod 644 f && ls -l f",
+    "expected": "rw-r--r--",
+    "category": "文件"
+  },
+  {
+    "name": "查找文件",
+    "command": "/nsjail touch a.txt && find . -name '*.txt'",
+    "expected": "a.txt",
+    "category": "文件"
+  },
+  {
+    "name": "文件统计",
+    "command": "/nsjail echo -e 'a\\nb\\nc' > f && wc -l f",
+    "expected": "3",
+    "category": "文件"
+  },
+  {
+    "name": "文件复制",
+    "command": "/nsjail echo test > a && cp a b && cat b",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "文件移动",
+    "command": "/nsjail echo x > a && mv a b && cat b",
+    "expected": "x",
+    "category": "文件"
+  },
+  {
+    "name": "文件删除",
+    "command": "/nsjail touch f && rm f && ls f 2>&1",
+    "expected": "No such file",
+    "category": "文件"
+  },
+  {
+    "name": "目录树",
+    "command": "/nsjail mkdir -p a/b/c && ls -R",
+    "expected": "a",
+    "category": "文件"
+  },
+  {
+    "name": "文件类型",
+    "command": "/nsjail echo test > f && file f",
+    "expected": "ASCII",
+    "category": "文件"
+  },
+  {
+    "name": "文件内容",
+    "command": "/nsjail echo -e '1\\n2\\n3' > f && head -2 f",
+    "expected": "1",
+    "category": "文件"
+  },
+  {
+    "name": "文件尾部",
+    "command": "/nsjail echo -e '1\\n2\\n3' > f && tail -1 f",
+    "expected": "3",
+    "category": "文件"
+  },
+  {
+    "name": "文件排序",
+    "command": "/nsjail echo -e '3\\n1\\n2' > f && sort f",
+    "expected": "1",
+    "category": "文件"
+  },
+  {
+    "name": "文件去重",
+    "command": "/nsjail echo -e 'a\\na\\nb' > f && uniq f",
+    "expected": "a",
+    "category": "文件"
+  },
+  {
+    "name": "文件压缩",
+    "command": "/nsjail echo test > f && gzip f && ls",
+    "expected": "f.gz",
+    "category": "文件"
+  },
+  {
+    "name": "tar打包",
+    "command": "/nsjail echo test > f && tar -czf a.tar.gz f && ls",
+    "expected": "a.tar.gz",
+    "category": "文件"
+  },
+  {
+    "name": "文件对比",
+    "command": "/nsjail echo a > f1 && echo b > f2 && diff f1 f2",
+    "expected": "退出码",
+    "category": "文件"
+  },
+  {
+    "name": "符号链接",
+    "command": "/nsjail echo test > a && ln -s a b && cat b",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "文件MD5",
+    "command": "/nsjail echo test > f && md5sum f",
+    "expected": "退出码",
+    "category": "文件"
+  },
+  {
+    "name": "管道",
+    "command": "/nsjail echo hello | tr a-z A-Z",
+    "expected": "HELLO",
+    "category": "Shell"
+  },
+  {
+    "name": "重定向",
+    "command": "/nsjail echo err 2>&1",
+    "expected": "err",
+    "category": "Shell"
+  },
+  {
+    "name": "变量",
+    "command": "/nsjail X=123 && echo $X",
+    "expected": "123",
+    "category": "Shell"
+  },
+  {
+    "name": "循环",
+    "command": "/nsjail for i in 1 2 3; do echo $i; done",
+    "expected": "1",
+    "category": "Shell"
+  },
+  {
+    "name": "条件",
+    "command": "/nsjail if [ 1 -eq 1 ]; then echo yes; fi",
+    "expected": "yes",
+    "category": "Shell"
+  },
+  {
+    "name": "命令替换",
+    "command": "/nsjail echo $(expr 1 + 1)",
+    "expected": "2",
+    "category": "Shell"
+  },
+  {
+    "name": "字符串处理",
+    "command": "/nsjail echo 'hello world' | cut -d' ' -f1",
+    "expected": "hello",
+    "category": "Shell"
+  },
+  {
+    "name": "grep过滤",
+    "command": "/nsjail echo -e 'a\\nb\\nc' | grep b",
+    "expected": "b",
+    "category": "Shell"
+  },
+  {
+    "name": "sed替换",
+    "command": "/nsjail echo hello | sed 's/hello/hi/'",
+    "expected": "hi",
+    "category": "Shell"
+  },
+  {
+    "name": "awk处理",
+    "command": "/nsjail echo '1 2 3' | awk '{print $2}'",
+    "expected": "2",
+    "category": "Shell"
+  },
+  {
+    "name": "xargs",
+    "command": "/nsjail echo -e 'a\\nb' | xargs echo",
+    "expected": "a b",
+    "category": "Shell"
+  },
+  {
+    "name": "tee命令",
+    "command": "/nsjail echo test | tee f.txt",
+    "expected": "test",
+    "category": "Shell"
+  },
+  {
+    "name": "basename",
+    "command": "/nsjail basename /path/to/file.txt",
+    "expected": "file.txt",
+    "category": "Shell"
+  },
+  {
+    "name": "dirname",
+    "command": "/nsjail dirname /path/to/file",
+    "expected": "/path/to",
+    "category": "Shell"
+  },
+  {
+    "name": "date命令",
+    "command": "/nsjail date +%Y",
+    "expected": "202",
+    "category": "Shell"
+  },
+  {
+    "name": "sleep命令",
+    "command": "/nsjail sleep 1 && echo done",
+    "expected": "done",
+    "category": "Shell"
+  },
+  {
+    "name": "true命令",
+    "command": "/nsjail true && echo ok",
+    "expected": "ok",
+    "category": "Shell"
+  },
+  {
+    "name": "false命令",
+    "command": "/nsjail false || echo ok",
+    "expected": "ok",
+    "category": "Shell"
+  },
+  {
+    "name": "test命令",
+    "command": "/nsjail test -d /workspace && echo yes",
+    "expected": "yes",
+    "category": "Shell"
+  },
+  {
+    "name": "which命令",
+    "command": "/nsjail which python3",
+    "expected": "/usr/bin/python3",
+    "category": "Shell"
+  },
+  {
+    "name": "Python字符串",
+    "command": "/nsjail python3 -c 'print(\"hello\".upper())'",
+    "expected": "HELLO",
+    "category": "Python"
+  },
+  {
+    "name": "Python字典",
+    "command": "/nsjail python3 -c 'd={\"a\":1}; print(d[\"a\"])'",
+    "expected": "1",
+    "category": "Python"
+  },
+  {
+    "name": "Python集合",
+    "command": "/nsjail python3 -c 'print(len({1,2,3}))'",
+    "expected": "3",
+    "category": "Python"
+  },
+  {
+    "name": "Python元组",
+    "command": "/nsjail python3 -c 'print((1,2,3)[1])'",
+    "expected": "2",
+    "category": "Python"
+  },
+  {
+    "name": "Python切片",
+    "command": "/nsjail python3 -c 'print([1,2,3,4][1:3])'",
+    "expected": "[2, 3]",
+    "category": "Python"
+  },
+  {
+    "name": "Python lambda",
+    "command": "/nsjail python3 -c 'f=lambda x:x*2; print(f(5))'",
+    "expected": "10",
+    "category": "Python"
+  },
+  {
+    "name": "Python map",
+    "command": "/nsjail python3 -c 'print(list(map(lambda x:x*2,[1,2,3])))'",
+    "expected": "[2, 4, 6]",
+    "category": "Python"
+  },
+  {
+    "name": "Python filter",
+    "command": "/nsjail python3 -c 'print(list(filter(lambda x:x>2,[1,2,3,4])))'",
+    "expected": "[3, 4]",
+    "category": "Python"
+  },
+  {
+    "name": "Python sorted",
+    "command": "/nsjail python3 -c 'print(sorted([3,1,2]))'",
+    "expected": "[1, 2, 3]",
+    "category": "Python"
+  },
+  {
+    "name": "Python join",
+    "command": "/nsjail python3 -c 'print(\",\".join([\"a\",\"b\",\"c\"]))'",
+    "expected": "a,b,c",
+    "category": "Python"
+  },
+  {
+    "name": "Python split",
+    "command": "/nsjail python3 -c 'print(\"a,b,c\".split(\",\"))'",
+    "expected": "['a', 'b', 'c']",
+    "category": "Python"
+  },
+  {
+    "name": "Python format",
+    "command": "/nsjail python3 -c 'print(\"{}+{}={}\".format(1,2,3))'",
+    "expected": "1+2=3",
+    "category": "Python"
+  },
+  {
+    "name": "Python f-string",
+    "command": "/nsjail python3 -c 'x=5; print(f\"x={x}\")'",
+    "expected": "x=5",
+    "category": "Python"
+  },
+  {
+    "name": "Python range",
+    "command": "/nsjail python3 -c 'print(list(range(3)))'",
+    "expected": "[0, 1, 2]",
+    "category": "Python"
+  },
+  {
+    "name": "Python enumerate",
+    "command": "/nsjail python3 -c 'print(list(enumerate([\"a\",\"b\"])))'",
+    "expected": "[(0, 'a'), (1, 'b')]",
+    "category": "Python"
+  },
+  {
+    "name": "Python zip",
+    "command": "/nsjail python3 -c 'print(list(zip([1,2],[\"a\",\"b\"])))'",
+    "expected": "[(1, 'a'), (2, 'b')]",
+    "category": "Python"
+  },
+  {
+    "name": "Python any",
+    "command": "/nsjail python3 -c 'print(any([False,True,False]))'",
+    "expected": "True",
+    "category": "Python"
+  },
+  {
+    "name": "Python all",
+    "command": "/nsjail python3 -c 'print(all([True,True,True]))'",
+    "expected": "True",
+    "category": "Python"
+  },
+  {
+    "name": "Python sum",
+    "command": "/nsjail python3 -c 'print(sum([1,2,3,4]))'",
+    "expected": "10",
+    "category": "Python"
+  },
+  {
+    "name": "Python max",
+    "command": "/nsjail python3 -c 'print(max([1,5,3]))'",
+    "expected": "5",
+    "category": "Python"
+  },
+  {
+    "name": "Node数组",
+    "command": "/nsjail node -e 'console.log([1,2,3].length)'",
+    "expected": "3",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node对象",
+    "command": "/nsjail node -e 'console.log({a:1}.a)'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node字符串",
+    "command": "/nsjail node -e 'console.log(\"hello\".toUpperCase())'",
+    "expected": "HELLO",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node JSON",
+    "command": "/nsjail node -e 'console.log(JSON.stringify({a:1}))'",
+    "expected": "{\"a\":1}",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node map",
+    "command": "/nsjail node -e 'console.log([1,2,3].map(x=>x*2))'",
+    "expected": "[ 2, 4, 6 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node filter",
+    "command": "/nsjail node -e 'console.log([1,2,3,4].filter(x=>x>2))'",
+    "expected": "[ 3, 4 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node reduce",
+    "command": "/nsjail node -e 'console.log([1,2,3].reduce((a,b)=>a+b))'",
+    "expected": "6",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node箭头函数",
+    "command": "/nsjail node -e 'const f=x=>x*2; console.log(f(5))'",
+    "expected": "10",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node模板字符串",
+    "command": "/nsjail node -e 'const x=5; console.log(`x=${x}`)'",
+    "expected": "x=5",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node解构",
+    "command": "/nsjail node -e 'const {a}={a:1}; console.log(a)'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node扩展运算符",
+    "command": "/nsjail node -e 'console.log([...[1,2],...[3,4]])'",
+    "expected": "[ 1, 2, 3, 4 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Promise",
+    "command": "/nsjail node -e 'Promise.resolve(42).then(console.log)'",
+    "expected": "42",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node async",
+    "command": "/nsjail node -e '(async()=>console.log(await Promise.resolve(1)))()'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Set",
+    "command": "/nsjail node -e 'console.log(new Set([1,2,2,3]).size)'",
+    "expected": "3",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Map",
+    "command": "/nsjail node -e 'const m=new Map(); m.set(\"a\",1); console.log(m.get(\"a\"))'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "进程信息",
+    "command": "/nsjail ps aux | head -2",
+    "expected": "PID",
+    "category": "系统"
+  },
+  {
+    "name": "内存信息",
+    "command": "/nsjail free -h 2>&1 || echo ok",
+    "expected": "退出码",
+    "category": "系统"
+  },
+  {
+    "name": "磁盘使用",
+    "command": "/nsjail df -h . 2>&1",
+    "expected": "退出码",
+    "category": "系统"
+  },
+  {
+    "name": "环境变量列表",
+    "command": "/nsjail env | grep PATH",
+    "expected": "PATH",
+    "category": "系统"
+  },
+  {
+    "name": "用户信息",
+    "command": "/nsjail whoami",
+    "expected": "退出码",
+    "category": "系统"
+  },
+  {
+    "name": "主机名",
+    "command": "/nsjail hostname",
+    "expected": "退出码",
+    "category": "系统"
+  },
+  {
+    "name": "时间戳",
+    "command": "/nsjail date +%s",
+    "expected": "17",
+    "category": "系统"
+  },
+  {
+    "name": "随机数",
+    "command": "/nsjail echo $RANDOM",
+    "expected": "退出码",
+    "category": "系统"
+  },
+  {
+    "name": "base64编码",
+    "command": "/nsjail echo hello | base64",
+    "expected": "aGVsbG8K",
+    "category": "编码"
+  },
+  {
+    "name": "base64解码",
+    "command": "/nsjail echo aGVsbG8K | base64 -d",
+    "expected": "hello",
+    "category": "编码"
+  },
+  {
+    "name": "URL编码",
+    "command": "/nsjail python3 -c 'import urllib.parse; print(urllib.parse.quote(\"a b\"))'",
+    "expected": "a%20b",
+    "category": "编码"
+  },
+  {
+    "name": "十六进制",
+    "command": "/nsjail echo hello | xxd -p",
+    "expected": "68656c6c6f",
+    "category": "编码"
+  },
+  {
+    "name": "字符统计",
+    "command": "/nsjail echo hello | wc -c",
+    "expected": "6",
+    "category": "文本"
+  },
+  {
+    "name": "单词统计",
+    "command": "/nsjail echo 'a b c' | wc -w",
+    "expected": "3",
+    "category": "文本"
+  },
+  {
+    "name": "行号",
+    "command": "/nsjail echo -e 'a\\nb' | nl",
+    "expected": "1",
+    "category": "文本"
+  }
+]
