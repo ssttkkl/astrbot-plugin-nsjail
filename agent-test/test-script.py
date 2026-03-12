@@ -27,33 +27,42 @@ def login(username, password_md5):
         raise Exception(f"登录失败: {data}")
 
 def run_test(test_case, session_id, token):
-    message = test_case['command']
-    response = requests.post(
-        f"{API_BASE}/chat/send",
-        headers={'Authorization': f'Bearer {token}'},
-        json={'message': message, 'session_id': session_id},
-        stream=True,
-        timeout=60
-    )
+    """执行单个测试，支持多步骤命令"""
+    commands = test_case.get('commands', [test_case['command']])
+    if isinstance(commands, str):
+        commands = [commands]
     
-    output = ""
-    for line in response.iter_lines():
-        if line:
-            line_str = line.decode('utf-8')
-            if line_str.startswith('data: '):
-                try:
-                    data = json.loads(line_str[6:])
-                    if data.get('type') == 'plain':
-                        output += data.get('data', '')
-                    elif data.get('type') == 'end':
-                        break
-                except:
-                    pass
+    all_output = ""
+    for cmd in commands:
+        response = requests.post(
+            f"{API_BASE}/chat/send",
+            headers={'Authorization': f'Bearer {token}'},
+            json={'message': cmd, 'session_id': session_id},
+            stream=True,
+            timeout=60
+        )
+        
+        output = ""
+        for line in response.iter_lines():
+            if line:
+                line_str = line.decode('utf-8')
+                if line_str.startswith('data: '):
+                    try:
+                        data = json.loads(line_str[6:])
+                        if data.get('type') == 'plain':
+                            output += data.get('data', '')
+                        elif data.get('type') == 'end':
+                            break
+                    except:
+                        pass
+        
+        all_output += output + "\n---\n"
+        time.sleep(0.5)  # 等待沙箱状态更新
     
     return {
         'name': test_case['name'],
         'expected': test_case['expected'],
-        'output': output[:500],
+        'output': all_output[:1000],
         'category': test_case.get('category', 'Unknown')
     }
 

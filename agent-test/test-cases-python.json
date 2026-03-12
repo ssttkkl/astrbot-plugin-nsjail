@@ -208,5 +208,37 @@
     "command": "/nsjail python3 -c 'import tomli; data=tomli.loads(\"key = \\\"value\\\"\"); print(data[\"key\"])'",
     "expected": "应该解析 TOML 并返回 key 的值 value",
     "category": "Python"
+  },
+  {
+    "name": "创建venv并安装包",
+    "commands": [
+      "/nsjail python3 -m venv /workspace/myenv",
+      "/nsjail ls /workspace/myenv/bin",
+      "/nsjail /workspace/myenv/bin/pip install requests",
+      "/nsjail /workspace/myenv/bin/python -c 'import requests; print(requests.__version__)'"
+    ],
+    "expected": "应该创建虚拟环境、安装 requests 包并输出版本号",
+    "category": "Python"
+  },
+  {
+    "name": "venv中运行脚本",
+    "commands": [
+      "/nsjail python3 -m venv /workspace/testenv",
+      "/nsjail echo 'print(\"hello from venv\")' > /workspace/test.py",
+      "/nsjail /workspace/testenv/bin/python /workspace/test.py"
+    ],
+    "expected": "应该在虚拟环境中运行脚本并输出 hello from venv",
+    "category": "Python"
+  },
+  {
+    "name": "多步骤文件操作",
+    "commands": [
+      "/nsjail echo 'step1' > /workspace/data.txt",
+      "/nsjail cat /workspace/data.txt",
+      "/nsjail echo 'step2' >> /workspace/data.txt",
+      "/nsjail cat /workspace/data.txt"
+    ],
+    "expected": "应该逐步写入文件，最终包含 step1 和step2",
+    "category": "Python"
   }
 ]
