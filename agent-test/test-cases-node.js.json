@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Node版本",
+    "command": "/nsjail node --version",
+    "expected": "v",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node计算",
+    "command": "/nsjail node -e 'console.log(Math.pow(2,10))'",
+    "expected": "1024",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node数组",
+    "command": "/nsjail node -e 'console.log([1,2,3].length)'",
+    "expected": "3",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node对象",
+    "command": "/nsjail node -e 'console.log({a:1}.a)'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node字符串",
+    "command": "/nsjail node -e 'console.log(\"hello\".toUpperCase())'",
+    "expected": "HELLO",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node JSON",
+    "command": "/nsjail node -e 'console.log(JSON.stringify({a:1}))'",
+    "expected": "{\"a\":1}",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node map",
+    "command": "/nsjail node -e 'console.log([1,2,3].map(x=>x*2))'",
+    "expected": "[ 2, 4, 6 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node filter",
+    "command": "/nsjail node -e 'console.log([1,2,3,4].filter(x=>x>2))'",
+    "expected": "[ 3, 4 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node reduce",
+    "command": "/nsjail node -e 'console.log([1,2,3].reduce((a,b)=>a+b))'",
+    "expected": "6",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node箭头函数",
+    "command": "/nsjail node -e 'const f=x=>x*2; console.log(f(5))'",
+    "expected": "10",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node模板字符串",
+    "command": "/nsjail node -e 'const x=5; console.log(`x=${x}`)'",
+    "expected": "x=5",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node解构",
+    "command": "/nsjail node -e 'const {a}={a:1}; console.log(a)'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node扩展运算符",
+    "command": "/nsjail node -e 'console.log([...[1,2],...[3,4]])'",
+    "expected": "[ 1, 2, 3, 4 ]",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Promise",
+    "command": "/nsjail node -e 'Promise.resolve(42).then(console.log)'",
+    "expected": "42",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node async",
+    "command": "/nsjail node -e '(async()=>console.log(await Promise.resolve(1)))()'",
+    "expected": "1",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Set",
+    "command": "/nsjail node -e 'console.log(new Set([1,2,2,3]).size)'",
+    "expected": "3",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Map",
+    "command": "/nsjail node -e 'const m=new Map(); m.set(\"a\",1); console.log(m.get(\"a\"))'",
+    "expected": "1",
+    "category": "Node.js"
+  }
+]

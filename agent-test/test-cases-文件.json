@@ -1,0 +1,122 @@
+[
+  {
+    "name": "创建目录",
+    "command": "/nsjail mkdir test && ls",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "写入文件",
+    "command": "/nsjail echo 'data' > file.txt && cat file.txt",
+    "expected": "data",
+    "category": "文件"
+  },
+  {
+    "name": "追加文件",
+    "command": "/nsjail echo 'a' > f.txt && echo 'b' >> f.txt && cat f.txt",
+    "expected": "b",
+    "category": "文件"
+  },
+  {
+    "name": "文件权限",
+    "command": "/nsjail touch f && chmod 644 f && ls -l f",
+    "expected": "rw-r--r--",
+    "category": "文件"
+  },
+  {
+    "name": "查找文件",
+    "command": "/nsjail touch a.txt && find . -name '*.txt'",
+    "expected": "a.txt",
+    "category": "文件"
+  },
+  {
+    "name": "文件统计",
+    "command": "/nsjail echo -e 'a\\nb\\nc' > f && wc -l f",
+    "expected": "3",
+    "category": "文件"
+  },
+  {
+    "name": "文件复制",
+    "command": "/nsjail echo test > a && cp a b && cat b",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "文件移动",
+    "command": "/nsjail echo x > a && mv a b && cat b",
+    "expected": "x",
+    "category": "文件"
+  },
+  {
+    "name": "文件删除",
+    "command": "/nsjail touch f && rm f && ls f 2>&1",
+    "expected": "No such file",
+    "category": "文件"
+  },
+  {
+    "name": "目录树",
+    "command": "/nsjail mkdir -p a/b/c && ls -R",
+    "expected": "a",
+    "category": "文件"
+  },
+  {
+    "name": "文件类型",
+    "command": "/nsjail echo test > f && file f",
+    "expected": "ASCII",
+    "category": "文件"
+  },
+  {
+    "name": "文件内容",
+    "command": "/nsjail echo -e '1\\n2\\n3' > f && head -2 f",
+    "expected": "1",
+    "category": "文件"
+  },
+  {
+    "name": "文件尾部",
+    "command": "/nsjail echo -e '1\\n2\\n3' > f && tail -1 f",
+    "expected": "3",
+    "category": "文件"
+  },
+  {
+    "name": "文件排序",
+    "command": "/nsjail echo -e '3\\n1\\n2' > f && sort f",
+    "expected": "1",
+    "category": "文件"
+  },
+  {
+    "name": "文件去重",
+    "command": "/nsjail echo -e 'a\\na\\nb' > f && uniq f",
+    "expected": "a",
+    "category": "文件"
+  },
+  {
+    "name": "文件压缩",
+    "command": "/nsjail echo test > f && gzip f && ls",
+    "expected": "f.gz",
+    "category": "文件"
+  },
+  {
+    "name": "tar打包",
+    "command": "/nsjail echo test > f && tar -czf a.tar.gz f && ls",
+    "expected": "a.tar.gz",
+    "category": "文件"
+  },
+  {
+    "name": "文件对比",
+    "command": "/nsjail echo a > f1 && echo b > f2 && diff f1 f2",
+    "expected": "退出码",
+    "category": "文件"
+  },
+  {
+    "name": "符号链接",
+    "command": "/nsjail echo test > a && ln -s a b && cat b",
+    "expected": "test",
+    "category": "文件"
+  },
+  {
+    "name": "文件MD5",
+    "command": "/nsjail echo test > f && md5sum f",
+    "expected": "退出码",
+    "category": "文件"
+  }
+]

@@ -1,0 +1,212 @@
+[
+  {
+    "name": "Python计算",
+    "command": "/nsjail python3 -c 'print(2**10)'",
+    "expected": "1024",
+    "category": "Python"
+  },
+  {
+    "name": "Python JSON",
+    "command": "/nsjail python3 -c 'import json; print(json.dumps({\"a\":1}))'",
+    "expected": "{\"a\": 1}",
+    "category": "Python"
+  },
+  {
+    "name": "Python列表",
+    "command": "/nsjail python3 -c 'print([x*2 for x in range(5)])'",
+    "expected": "[0, 2, 4, 6, 8]",
+    "category": "Python"
+  },
+  {
+    "name": "requests库-GET",
+    "command": "/nsjail python3 -c 'import requests; r=requests.get(\"http://httpbin.org/get\"); print(r.status_code)'",
+    "expected": "200",
+    "category": "Python"
+  },
+  {
+    "name": "requests库-POST",
+    "command": "/nsjail python3 -c 'import requests; r=requests.post(\"http://httpbin.org/post\", json={\"key\":\"value\"}); print(r.json()[\"json\"][\"key\"])'",
+    "expected": "value",
+    "category": "Python"
+  },
+  {
+    "name": "BeautifulSoup解析",
+    "command": "/nsjail python3 -c 'from bs4 import BeautifulSoup; html=\"<p>test</p>\"; soup=BeautifulSoup(html,\"html.parser\"); print(soup.p.text)'",
+    "expected": "test",
+    "category": "Python"
+  },
+  {
+    "name": "pandas创建DataFrame",
+    "command": "/nsjail python3 -c 'import pandas as pd; df=pd.DataFrame({\"a\":[1,2,3]}); print(len(df))'",
+    "expected": "3",
+    "category": "Python"
+  },
+  {
+    "name": "numpy数组操作",
+    "command": "/nsjail python3 -c 'import numpy as np; arr=np.array([1,2,3]); print(arr.sum())'",
+    "expected": "6",
+    "category": "Python"
+  },
+  {
+    "name": "datetime处理",
+    "command": "/nsjail python3 -c 'from datetime import datetime; print(datetime.now().year)'",
+    "expected": "202",
+    "category": "Python"
+  },
+  {
+    "name": "re正则匹配",
+    "command": "/nsjail python3 -c 'import re; print(re.findall(r\"\\d+\", \"abc123def456\"))'",
+    "expected": "['123', '456']",
+    "category": "Python"
+  },
+  {
+    "name": "pathlib路径",
+    "command": "/nsjail python3 -c 'from pathlib import Path; p=Path(\"/workspace\"); print(p.name)'",
+    "expected": "workspace",
+    "category": "Python"
+  },
+  {
+    "name": "多行函数定义",
+    "command": "/nsjail python3 -c 'def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)\nprint(fib(10))'",
+    "expected": "55",
+    "category": "Python"
+  },
+  {
+    "name": "类定义和使用",
+    "command": "/nsjail python3 -c 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    def distance(self):\n        return (self.x**2 + self.y**2)**0.5\np = Point(3, 4)\nprint(int(p.distance()))'",
+    "expected": "5",
+    "category": "Python"
+  },
+  {
+    "name": "异常处理",
+    "command": "/nsjail python3 -c 'try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    print(\"caught\")'",
+    "expected": "caught",
+    "category": "Python"
+  },
+  {
+    "name": "上下文管理器",
+    "command": "/nsjail python3 -c 'with open(\"/workspace/test.txt\", \"w\") as f:\n    f.write(\"hello\")\nwith open(\"/workspace/test.txt\") as f:\n    print(f.read())'",
+    "expected": "hello",
+    "category": "Python"
+  },
+  {
+    "name": "httpx同步请求",
+    "command": "/nsjail python3 -c 'import httpx; r=httpx.get(\"http://httpbin.org/get\"); print(r.status_code)'",
+    "expected": "200",
+    "category": "Python"
+  },
+  {
+    "name": "httpx异步请求",
+    "command": "/nsjail python3 -c 'import asyncio, httpx; async def f(): async with httpx.AsyncClient() as c: r=await c.get(\"http://httpbin.org/get\"); return r.status_code; print(asyncio.run(f()))'",
+    "expected": "200",
+    "category": "Python"
+  },
+  {
+    "name": "pydantic模型验证",
+    "command": "/nsjail python3 -c 'from pydantic import BaseModel; class User(BaseModel): name: str; age: int; u=User(name=\"test\", age=25); print(u.age)'",
+    "expected": "25",
+    "category": "Python"
+  },
+  {
+    "name": "pydantic类型错误",
+    "command": "/nsjail python3 -c 'from pydantic import BaseModel, ValidationError; class User(BaseModel): age: int; try: User(age=\"abc\"); except ValidationError: print(\"error\")'",
+    "expected": "error",
+    "category": "Python"
+  },
+  {
+    "name": "aiohttp客户端",
+    "command": "/nsjail python3 -c 'import asyncio, aiohttp; async def f(): async with aiohttp.ClientSession() as s: async with s.get(\"http://httpbin.org/get\") as r: return r.status; print(asyncio.run(f()))'",
+    "expected": "200",
+    "category": "Python"
+  },
+  {
+    "name": "fastapi路由定义",
+    "command": "/nsjail python3 -c 'from fastapi import FastAPI; app=FastAPI(); @app.get(\"/\"); def read_root(): return {\"Hello\": \"World\"}; print(read_root())'",
+    "expected": "Hello",
+    "category": "Python"
+  },
+  {
+    "name": "typer CLI",
+    "command": "/nsjail python3 -c 'import typer; app=typer.Typer(); @app.command(); def hello(name: str = \"World\"): print(f\"Hello {name}\"); hello()'",
+    "expected": "Hello World",
+    "category": "Python"
+  },
+  {
+    "name": "rich格式化",
+    "command": "/nsjail python3 -c 'from rich.console import Console; c=Console(); c.print(\"[bold]test[/bold]\", end=\"\")'",
+    "expected": "test",
+    "category": "Python"
+  },
+  {
+    "name": "subprocess执行命令",
+    "command": "/nsjail python3 -c 'import subprocess; r=subprocess.run([\"echo\",\"test\"], capture_output=True, text=True); print(r.stdout.strip())'",
+    "expected": "test",
+    "category": "Python"
+  },
+  {
+    "name": "os文件操作",
+    "command": "/nsjail python3 -c 'import os; os.makedirs(\"/workspace/test\", exist_ok=True); print(os.path.exists(\"/workspace/test\"))'",
+    "expected": "True",
+    "category": "Python"
+  },
+  {
+    "name": "shutil文件复制",
+    "command": "/nsjail python3 -c 'import shutil; open(\"/workspace/a.txt\",\"w\").write(\"test\"); shutil.copy(\"/workspace/a.txt\",\"/workspace/b.txt\"); print(open(\"/workspace/b.txt\").read())'",
+    "expected": "test",
+    "category": "Python"
+  },
+  {
+    "name": "glob文件匹配",
+    "command": "/nsjail python3 -c 'import glob; open(\"/workspace/test.txt\",\"w\"); print(len(glob.glob(\"/workspace/*.txt\")))'",
+    "expected": "1",
+    "category": "Python"
+  },
+  {
+    "name": "tempfile临时文件",
+    "command": "/nsjail python3 -c 'import tempfile; with tempfile.NamedTemporaryFile(mode=\"w\",delete=False) as f: f.write(\"test\"); print(\"ok\")'",
+    "expected": "ok",
+    "category": "Python"
+  },
+  {
+    "name": "hashlib MD5",
+    "command": "/nsjail python3 -c 'import hashlib; print(hashlib.md5(b\"test\").hexdigest())'",
+    "expected": "098f6bcd4621d373cade4e832627b4f6",
+    "category": "Python"
+  },
+  {
+    "name": "base64编解码",
+    "command": "/nsjail python3 -c 'import base64; encoded=base64.b64encode(b\"test\"); print(base64.b64decode(encoded).decode())'",
+    "expected": "test",
+    "category": "Python"
+  },
+  {
+    "name": "urllib解析URL",
+    "command": "/nsjail python3 -c 'from urllib.parse import urlparse; u=urlparse(\"http://example.com/path?q=1\"); print(u.netloc)'",
+    "expected": "example.com",
+    "category": "Python"
+  },
+  {
+    "name": "sqlite3数据库",
+    "command": "/nsjail python3 -c 'import sqlite3; conn=sqlite3.connect(\":memory:\"); c=conn.cursor(); c.execute(\"CREATE TABLE t(id INT)\"); c.execute(\"INSERT INTO t VALUES(1)\"); print(c.execute(\"SELECT * FROM t\").fetchone()[0])'",
+    "expected": "1",
+    "category": "Python"
+  },
+  {
+    "name": "csv文件读写",
+    "command": "/nsjail python3 -c 'import csv; with open(\"/workspace/t.csv\",\"w\",newline=\"\") as f: csv.writer(f).writerow([\"a\",\"b\"]); with open(\"/workspace/t.csv\") as f: print(csv.reader(f).__next__()[0])'",
+    "expected": "a",
+    "category": "Python"
+  },
+  {
+    "name": "yaml解析",
+    "command": "/nsjail python3 -c 'import yaml; data=yaml.safe_load(\"key: value\"); print(data[\"key\"])'",
+    "expected": "value",
+    "category": "Python"
+  },
+  {
+    "name": "toml解析",
+    "command": "/nsjail python3 -c 'import tomli; data=tomli.loads(\"key = \\\"value\\\"\"); print(data[\"key\"])'",
+    "expected": "value",
+    "category": "Python"
+  }
+]
