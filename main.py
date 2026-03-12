@@ -1,42 +1,9 @@
 import asyncio
-from dataclasses import dataclass, field
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api import logger, AstrBotConfig, FunctionTool
+from astrbot.api import logger, AstrBotConfig
 from astrbot.core.message.message_event_result import MessageChain
 from .sandbox_manager import SandboxManager
-
-
-@dataclass
-class ExecuteShellTool(FunctionTool):
-    name: str = "execute_shell"
-    description: str = "在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱,文件系统隔离,资源受限。"
-    parameters: dict = field(
-        default_factory=lambda: {
-            "type": "object",
-            "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "要执行的 shell 命令",
-                },
-                "timeout": {
-                    "type": "number",
-                    "description": "超时时间(秒),默认30秒",
-                },
-            },
-            "required": ["command"],
-        }
-    )
-    
-    plugin_instance: any = None
-
-    async def run(self, event: AstrMessageEvent, command: str, timeout: int = 30):
-        if not self.plugin_instance:
-            return "插件未正确初始化"
-
-        session_id = event.session_id or "default"
-        output, code = await self.plugin_instance.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
-        return f"$ {command}\n{output}\n退出码: {code}"
 
 
 class NsjailPlugin(Star):
@@ -49,10 +16,19 @@ class NsjailPlugin(Star):
         import os
         data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "config")
         self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network)
+    
+    @filter.llm_tool(name="execute_shell")
+    async def execute_shell(self, event: AstrMessageEvent, command: str, timeout: int = 30):
+        """在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱,文件系统隔离,资源受限。
         
-        tool = ExecuteShellTool()
-        tool.plugin_instance = self
-        self.context.add_llm_tools(tool)
+        Args:
+            command(string): 要执行的 shell 命令
+            timeout(number): 超时时间(秒),默认30秒
+        """
+        session_id = event.session_id or "default"
+        output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
+        result = f"$ {command}\n{output}\n退出码: {code}"
+        yield event.plain_result(result)
     
     @filter.command("nsjail")
     async def handle_nsjail_command(self, event: AstrMessageEvent):
