@@ -27,8 +27,7 @@ class NsjailPlugin(Star):
         """
         session_id = event.session_id or "default"
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
-        result = f"$ {command}\n{output}\n退出码: {code}"
-        yield event.plain_result(result)
+        return f"$ {command}\n{output}\n退出码: {code}"
     
     @filter.command("nsjail")
     async def handle_nsjail_command(self, event: AstrMessageEvent):
