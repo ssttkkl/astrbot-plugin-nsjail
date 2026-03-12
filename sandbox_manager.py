@@ -10,10 +10,12 @@ from astrbot.api import logger
 
 class SandboxManager:
     """沙箱管理器"""
-    def __init__(self, data_dir: str, max_timeout: int = 60, enable_network: bool = False):
+    def __init__(self, data_dir: str, max_timeout: int = 60, enable_network: bool = False, memory_limit_mb: int = -1, cpu_limit_percent: int = -1):
         self.sandboxes = {}
         self.max_timeout = max_timeout
         self.enable_network = enable_network
+        self.memory_limit_mb = memory_limit_mb
+        self.cpu_limit_percent = cpu_limit_percent
         self.uid_map_file = os.path.join(data_dir, "nsjail_uid_map.json")
         self.uid_map = self._load_uid_map()
     
@@ -99,7 +101,6 @@ class SandboxManager:
             "--user", "99999",
             "--group", "99999",
             "--disable_clone_newuser",
-            "--disable_clone_newnet",
             "--bindmount", f"{sandbox_dir}:/workspace:rw",
             "--bindmount", "/usr:/usr:ro",
             "--bindmount", "/lib:/lib:ro",
@@ -108,7 +109,9 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
         ]
         
+        # 网络配置：默认隔离，配置启用时才共享宿主网络
         if self.enable_network:
+            nsjail_cmd.append("--disable_clone_newnet")
             nsjail_cmd.extend([
                 "--bindmount", "/etc/resolv.conf:/etc/resolv.conf:ro",
                 "--bindmount", "/etc/ssl:/etc/ssl:ro"
@@ -120,9 +123,26 @@ class SandboxManager:
         nsjail_cmd.extend([
             "--cwd", "/workspace",
             "--time_limit", str(timeout),
-            "--max_cpus", "1",
-            "--rlimit_as", "512",
             "--rlimit_fsize", "100",
+        ])
+        
+        # 使用 Cgroup V2 进行资源限制（如果配置了）
+        if self.memory_limit_mb > 0 or self.cpu_limit_percent > 0:
+            nsjail_cmd.extend([
+                "--use_cgroupv2",
+                "--cgroupv2_mount", "/sys/fs/cgroup",
+            ])
+            
+            if self.memory_limit_mb > 0:
+                memory_bytes = self.memory_limit_mb * 1024 * 1024
+                nsjail_cmd.extend(["--cgroup_mem_max", str(memory_bytes)])
+            
+            if self.cpu_limit_percent > 0:
+                # CPU 限制：百分比转换为毫秒/秒
+                cpu_ms_per_sec = self.cpu_limit_percent * 10
+                nsjail_cmd.extend(["--cgroup_cpu_ms_per_sec", str(cpu_ms_per_sec)])
+        
+        nsjail_cmd.extend([
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
             "--quiet",
             "--",

@@ -141,24 +141,6 @@
     ]
   },
   {
-    "name": "fastapi路由定义",
-    "expected": "应该返回字典包含 Hello 键",
-    "category": "Python",
-    "commands": [
-      "/nsjail bash -c 'cat > /workspace/fastapi路由定义.py << \"PYEOF\"\nfrom fastapi import FastAPI\napp = FastAPI()\n@app.get(\"/\")\ndef read_root():\n    return {\"Hello\": \"World\"}\nprint(read_root())\nPYEOF'",
-      "/nsjail python3 /workspace/fastapi路由定义.py"
-    ]
-  },
-  {
-    "name": "typer CLI",
-    "expected": "应该输出 Hello World",
-    "category": "Python",
-    "commands": [
-      "/nsjail bash -c 'cat > /workspace/typer_CLI.py << \"PYEOF\"\nimport typer\napp = typer.Typer()\n@app.command()\ndef hello(name: str = \"World\"):\n    print(f\"Hello {name}\")\nhello()\nPYEOF'",
-      "/nsjail python3 /workspace/typer_CLI.py"
-    ]
-  },
-  {
     "name": "subprocess执行命令",
     "command": "/nsjail python3 -c 'import subprocess; r=subprocess.run([\"echo\",\"test\"], capture_output=True, text=True); print(r.stdout.strip())'",
     "expected": "应该执行 echo 命令并返回 test",

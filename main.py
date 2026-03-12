@@ -12,10 +12,12 @@ class NsjailPlugin(Star):
         self.config = config
         max_timeout = config.get("max_timeout", 60)
         enable_network = config.get("enable_network", False)
+        memory_limit_mb = config.get("memory_limit_mb", -1)
+        cpu_limit_percent = config.get("cpu_limit_percent", -1)
         
         import os
         data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "config")
-        self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network)
+        self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network, memory_limit_mb, cpu_limit_percent)
     
     @filter.llm_tool(name="execute_shell")
     async def execute_shell(self, event: AstrMessageEvent, command: str, timeout: int = 30):
