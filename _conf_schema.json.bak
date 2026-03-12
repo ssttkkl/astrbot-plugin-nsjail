@@ -1,8 +1,0 @@
-{
-  "max_timeout": {
-    "description": "最大超时时间（秒）",
-    "type": "int",
-    "default": 60,
-    "hint": "工具执行的最大超时时间，工具参数指定的超时不能超过此值"
-  }
-}
