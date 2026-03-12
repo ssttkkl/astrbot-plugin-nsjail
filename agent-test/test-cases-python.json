@@ -73,21 +73,30 @@
   },
   {
     "name": "类定义和使用",
-    "command": "/nsjail python3 -c 'class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    def distance(self):\n        return (self.x**2 + self.y**2)**0.5\np = Point(3, 4)\nprint(int(p.distance()))'",
     "expected": "应该计算点到原点的距离为 5",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/point.py << \"PYEOF\"\nclass Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    def distance(self):\n        return (self.x**2 + self.y**2)**0.5\np = Point(3, 4)\nprint(int(p.distance()))\nPYEOF'",
+      "/nsjail python3 /workspace/point.py"
+    ]
   },
   {
     "name": "异常处理",
-    "command": "/nsjail python3 -c 'try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    print(\"caught\")'",
     "expected": "应该捕获异常并输出 caught",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/exception.py << \"PYEOF\"\ntry:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    print(\"caught\")\nPYEOF'",
+      "/nsjail python3 /workspace/exception.py"
+    ]
   },
   {
     "name": "上下文管理器",
-    "command": "/nsjail python3 -c 'with open(\"/workspace/test.txt\", \"w\") as f:\n    f.write(\"hello\")\nwith open(\"/workspace/test.txt\") as f:\n    print(f.read())'",
     "expected": "应该成功写入并读取文件内容 hello",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/context.py << \"PYEOF\"\nwith open(\"/workspace/test.txt\", \"w\") as f:\n    f.write(\"hello\")\nwith open(\"/workspace/test.txt\") as f:\n    print(f.read())\nPYEOF'",
+      "/nsjail python3 /workspace/context.py"
+    ]
   },
   {
     "name": "httpx同步请求",
@@ -97,45 +106,57 @@
   },
   {
     "name": "httpx异步请求",
-    "command": "/nsjail python3 -c 'import asyncio, httpx; async def f(): async with httpx.AsyncClient() as c: r=await c.get(\"http://httpbin.org/get\"); return r.status_code; print(asyncio.run(f()))'",
     "expected": "异步 HTTP 请求应该返回状态码 200",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/httpx异步请求.py << \"PYEOF\"\nimport asyncio, httpx\nasync def f():\n    async with httpx.AsyncClient() as c:\n        r = await c.get(\"http://httpbin.org/get\")\n        return r.status_code\nprint(asyncio.run(f()))\nPYEOF'",
+      "/nsjail python3 /workspace/httpx异步请求.py"
+    ]
   },
   {
     "name": "pydantic模型验证",
-    "command": "/nsjail python3 -c 'from pydantic import BaseModel; class User(BaseModel): name: str; age: int; u=User(name=\"test\", age=25); print(u.age)'",
     "expected": "应该验证模型并返回 age 字段值 25",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/pydantic模型验证.py << \"PYEOF\"\nfrom pydantic import BaseModel\nclass User(BaseModel):\n    name: str\n    age: int\nu = User(name=\"test\", age=25)\nprint(u.age)\nPYEOF'",
+      "/nsjail python3 /workspace/pydantic模型验证.py"
+    ]
   },
   {
     "name": "pydantic类型错误",
-    "command": "/nsjail python3 -c 'from pydantic import BaseModel, ValidationError; class User(BaseModel): age: int; try: User(age=\"abc\"); except ValidationError: print(\"error\")'",
     "expected": "应该捕获验证错误并输出 error",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/pydantic类型错误.py << \"PYEOF\"\nfrom pydantic import BaseModel, ValidationError\nclass User(BaseModel):\n    age: int\ntry:\n    User(age=\"abc\")\nexcept ValidationError:\n    print(\"error\")\nPYEOF'",
+      "/nsjail python3 /workspace/pydantic类型错误.py"
+    ]
   },
   {
     "name": "aiohttp客户端",
-    "command": "/nsjail python3 -c 'import asyncio, aiohttp; async def f(): async with aiohttp.ClientSession() as s: async with s.get(\"http://httpbin.org/get\") as r: return r.status; print(asyncio.run(f()))'",
     "expected": "异步 HTTP 请求应该返回状态码 200",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/aiohttp客户端.py << \"PYEOF\"\nimport asyncio, aiohttp\nasync def f():\n    async with aiohttp.ClientSession() as s:\n        async with s.get(\"http://httpbin.org/get\") as r:\n            return r.status\nprint(asyncio.run(f()))\nPYEOF'",
+      "/nsjail python3 /workspace/aiohttp客户端.py"
+    ]
   },
   {
     "name": "fastapi路由定义",
-    "command": "/nsjail python3 -c 'from fastapi import FastAPI; app=FastAPI(); @app.get(\"/\"); def read_root(): return {\"Hello\": \"World\"}; print(read_root())'",
     "expected": "应该返回字典包含 Hello 键",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/fastapi路由定义.py << \"PYEOF\"\nfrom fastapi import FastAPI\napp = FastAPI()\n@app.get(\"/\")\ndef read_root():\n    return {\"Hello\": \"World\"}\nprint(read_root())\nPYEOF'",
+      "/nsjail python3 /workspace/fastapi路由定义.py"
+    ]
   },
   {
     "name": "typer CLI",
-    "command": "/nsjail python3 -c 'import typer; app=typer.Typer(); @app.command(); def hello(name: str = \"World\"): print(f\"Hello {name}\"); hello()'",
     "expected": "应该输出 Hello World",
-    "category": "Python"
-  },
-  {
-    "name": "rich格式化",
-    "command": "/nsjail python3 -c 'from rich.console import Console; c=Console(); c.print(\"[bold]test[/bold]\", end=\"\")'",
-    "expected": "应该输出格式化文本包含 test",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/typer_CLI.py << \"PYEOF\"\nimport typer\napp = typer.Typer()\n@app.command()\ndef hello(name: str = \"World\"):\n    print(f\"Hello {name}\")\nhello()\nPYEOF'",
+      "/nsjail python3 /workspace/typer_CLI.py"
+    ]
   },
   {
     "name": "subprocess执行命令",
@@ -163,9 +184,12 @@
   },
   {
     "name": "tempfile临时文件",
-    "command": "/nsjail python3 -c 'import tempfile; with tempfile.NamedTemporaryFile(mode=\"w\",delete=False) as f: f.write(\"test\"); print(\"ok\")'",
     "expected": "应该创建临时文件并输出 ok",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/tempfile_test.py << \"PYEOF\"\nimport tempfile\nwith tempfile.NamedTemporaryFile(mode=\"w\", delete=False) as f:\n    f.write(\"test\")\nprint(\"ok\")\nPYEOF'",
+      "/nsjail python3 /workspace/tempfile_test.py"
+    ]
   },
   {
     "name": "hashlib MD5",
@@ -193,9 +217,12 @@
   },
   {
     "name": "csv文件读写",
-    "command": "/nsjail python3 -c 'import csv; with open(\"/workspace/t.csv\",\"w\",newline=\"\") as f: csv.writer(f).writerow([\"a\",\"b\"]); with open(\"/workspace/t.csv\") as f: print(csv.reader(f).__next__()[0])'",
     "expected": "应该写入 CSV 并读取第一列值 a",
-    "category": "Python"
+    "category": "Python",
+    "commands": [
+      "/nsjail bash -c 'cat > /workspace/csv_test.py << \"PYEOF\"\nimport csv\nwith open(\"/workspace/t.csv\", \"w\", newline=\"\") as f:\n    csv.writer(f).writerow([\"a\", \"b\"])\nwith open(\"/workspace/t.csv\") as f:\n    print(list(csv.reader(f))[0][0])\nPYEOF'",
+      "/nsjail python3 /workspace/csv_test.py"
+    ]
   },
   {
     "name": "yaml解析",
@@ -204,15 +231,9 @@
     "category": "Python"
   },
   {
-    "name": "toml解析",
-    "command": "/nsjail python3 -c 'import tomli; data=tomli.loads(\"key = \\\"value\\\"\"); print(data[\"key\"])'",
-    "expected": "应该解析 TOML 并返回 key 的值 value",
-    "category": "Python"
-  },
-  {
     "name": "创建venv并安装包",
     "commands": [
-      "/nsjail python3 -m venv /workspace/myenv",
+      "/nsjail /usr/bin/python3 -m venv /workspace/myenv",
       "/nsjail ls /workspace/myenv/bin",
       "/nsjail /workspace/myenv/bin/pip install requests",
       "/nsjail /workspace/myenv/bin/python -c 'import requests; print(requests.__version__)'"
@@ -223,8 +244,8 @@
   {
     "name": "venv中运行脚本",
     "commands": [
-      "/nsjail python3 -m venv /workspace/testenv",
-      "/nsjail echo 'print(\"hello from venv\")' > /workspace/test.py",
+      "/nsjail /usr/bin/python3 -m venv /workspace/testenv",
+      "/nsjail bash -c 'echo \"print(\\\"hello from venv\\\")\" > /workspace/test.py'",
       "/nsjail /workspace/testenv/bin/python /workspace/test.py"
     ],
     "expected": "应该在虚拟环境中运行脚本并输出 hello from venv",

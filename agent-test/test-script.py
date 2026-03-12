@@ -28,7 +28,10 @@ def login(username, password_md5):
 
 def run_test(test_case, session_id, token):
     """执行单个测试，支持多步骤命令"""
-    commands = test_case.get('commands', [test_case['command']])
+    if 'commands' in test_case:
+        commands = test_case['commands']
+    else:
+        commands = [test_case['command']]
     if isinstance(commands, str):
         commands = [commands]
     

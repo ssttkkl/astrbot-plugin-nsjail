@@ -163,6 +163,7 @@ class NsjailPlugin(Star):
             "--max_cpus", "1",
             "--rlimit_as", "512",
             "--rlimit_fsize", "100",
+            "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
             "--quiet",
             "--",
             "/bin/bash", "-c", command
