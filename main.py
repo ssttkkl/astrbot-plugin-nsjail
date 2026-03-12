@@ -101,7 +101,14 @@ class NsjailPlugin(Star):
     @filter.command("nsjail")
     async def handle_nsjail_command(self, event: AstrMessageEvent):
         """处理 /nsjail 命令"""
-        command = event.message_str.strip()
+        # 移除 /nsjail 前缀和可能的空格
+        full_msg = event.message_str.strip()
+        if full_msg.startswith('/nsjail'):
+            command = full_msg[7:].strip()  # 移除 '/nsjail' (7个字符)
+        elif full_msg.startswith('nsjail'):
+            command = full_msg[6:].strip()  # 移除 'nsjail' (6个字符)
+        else:
+            command = full_msg
         
         if not command:
             yield event.plain_result("用法: /nsjail <命令>")
@@ -160,6 +167,8 @@ class NsjailPlugin(Star):
             "--",
             "/bin/bash", "-c", command
         ])
+        
+        logger.info(f"执行 nsjail 命令: {' '.join(nsjail_cmd)}")
         
         try:
             proc = await asyncio.create_subprocess_exec(

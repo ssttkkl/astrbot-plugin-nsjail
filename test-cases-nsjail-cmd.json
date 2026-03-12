@@ -1,0 +1,62 @@
+[
+  {
+    "name": "基础echo命令",
+    "command": "/nsjail echo 'Hello World'",
+    "expected": "Hello World",
+    "category": "基础功能"
+  },
+  {
+    "name": "查看当前目录",
+    "command": "/nsjail pwd",
+    "expected": "/workspace",
+    "category": "文件系统"
+  },
+  {
+    "name": "列出目录内容",
+    "command": "/nsjail ls -la",
+    "expected": "total",
+    "category": "文件系统"
+  },
+  {
+    "name": "创建文件",
+    "command": "/nsjail touch test.txt && ls",
+    "expected": "test.txt",
+    "category": "文件操作"
+  },
+  {
+    "name": "写入并读取文件",
+    "command": "/nsjail echo 'test content' > file.txt && cat file.txt",
+    "expected": "test content",
+    "category": "文件操作"
+  },
+  {
+    "name": "Python版本检查",
+    "command": "/nsjail python3 --version",
+    "expected": "Python 3",
+    "category": "环境测试"
+  },
+  {
+    "name": "Python简单计算",
+    "command": "/nsjail python3 -c 'print(2+2)'",
+    "expected": "4",
+    "category": "Python测试"
+  },
+  {
+    "name": "环境变量测试",
+    "command": "/nsjail echo $HOME",
+    "expected": "退出码",
+    "category": "环境测试"
+  },
+  {
+    "name": "多行命令",
+    "command": "/nsjail for i in 1 2 3; do echo $i; done",
+    "expected": "1",
+    "category": "Shell功能"
+  },
+  {
+    "name": "命令管道",
+    "command": "/nsjail echo 'hello' | tr 'a-z' 'A-Z'",
+    "expected": "HELLO",
+    "category": "Shell功能"
+  }
+]
