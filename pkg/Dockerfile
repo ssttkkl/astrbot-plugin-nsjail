@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 # 创建最小的 chroot 环境（不包含 nodejs/npm）
 RUN mkdir -p /nsjail-root && \
     debootstrap --variant=minbase \
-    --include=python3,python3-pip,python3-numpy,python3-scipy,python3-pandas,python3-matplotlib,bash,coreutils,curl,wget \
+    --include=python3,python3-pip,python3-venv,python3-numpy,python3-scipy,python3-pandas,python3-matplotlib,bash,coreutils,curl,wget \
     stable /nsjail-root http://deb.debian.org/debian
 
 # 在 chroot 环境中安装 Node.js（使用 NodeSource）
