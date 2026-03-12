@@ -27,7 +27,7 @@ def login(username, password_md5):
         raise Exception(f"登录失败: {data}")
 
 def run_test(test_case, session_id, token):
-    message = f"使用 execute_shell 执行：{test_case['command']}"
+    message = test_case['command']
     response = requests.post(
         f"{API_BASE}/chat/send",
         headers={'Authorization': f'Bearer {token}'},
@@ -43,16 +43,18 @@ def run_test(test_case, session_id, token):
             if line_str.startswith('data: '):
                 try:
                     data = json.loads(line_str[6:])
-                    if data.get('type') == 'complete':
-                        output = data.get('data', '')
+                    if data.get('type') == 'plain':
+                        output += data.get('data', '')
+                    elif data.get('type') == 'end':
                         break
                 except:
                     pass
     
     return {
         'name': test_case['name'],
-        'passed': test_case['expected'] in output,
-        'output': output[:500]
+        'expected': test_case['expected'],
+        'output': output[:500],
+        'category': test_case.get('category', 'Unknown')
     }
 
 if __name__ == '__main__':

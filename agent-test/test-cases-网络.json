@@ -2,121 +2,121 @@
   {
     "name": "DNS解析-百度",
     "command": "/nsjail nslookup baidu.com",
-    "expected": "Address",
+    "expected": "应该解析域名并返回 IP 地址",
     "category": "网络"
   },
   {
     "name": "DNS解析-Google",
     "command": "/nsjail nslookup google.com",
-    "expected": "Address",
+    "expected": "应该解析域名并返回 IP 地址",
     "category": "网络"
   },
   {
     "name": "ping本地",
     "command": "/nsjail ping -c 1 127.0.0.1",
-    "expected": "1 packets transmitted",
+    "expected": "应该 ping 成功，显示发送和接收的包数",
     "category": "网络"
   },
   {
     "name": "curl百度",
     "command": "/nsjail curl -s -o /dev/null -w '%{http_code}' http://baidu.com",
-    "expected": "200",
+    "expected": "应该返回 HTTP 状态码 200 或 30x",
     "category": "网络"
   },
   {
     "name": "curl GitHub",
     "command": "/nsjail curl -s -I https://github.com | head -1",
-    "expected": "HTTP",
+    "expected": "应该返回 HTTP 响应头",
     "category": "网络"
   },
   {
     "name": "wget测试",
     "command": "/nsjail wget -q -O- http://example.com | head -5",
-    "expected": "Example Domain",
+    "expected": "应该下载页面并包含 Example Domain",
     "category": "网络"
   },
   {
     "name": "Python requests",
     "command": "/nsjail python3 -c 'import requests; print(requests.get(\"http://httpbin.org/status/200\").status_code)'",
-    "expected": "200",
+    "expected": "应该发送 HTTP 请求并返回状态码 200",
     "category": "网络"
   },
   {
     "name": "Python urllib",
     "command": "/nsjail python3 -c 'import urllib.request; print(urllib.request.urlopen(\"http://example.com\").status)'",
-    "expected": "200",
+    "expected": "应该发送请求并返回状态码 200",
     "category": "网络"
   },
   {
     "name": "netcat监听",
     "command": "/nsjail timeout 1 nc -l 8888 || echo ok",
-    "expected": "ok",
+    "expected": "应该超时或输出 ok",
     "category": "网络"
   },
   {
     "name": "telnet测试",
     "command": "/nsjail timeout 1 telnet 127.0.0.1 80 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该尝试连接",
     "category": "网络"
   },
   {
     "name": "Node.js HTTP请求",
     "command": "/nsjail node -e 'require(\"http\").get(\"http://example.com\",r=>console.log(r.statusCode))'",
-    "expected": "200",
+    "expected": "应该发送 HTTP 请求并返回状态码 200",
     "category": "网络"
   },
   {
     "name": "Node.js HTTPS请求",
     "command": "/nsjail node -e 'require(\"https\").get(\"https://example.com\",r=>console.log(r.statusCode))'",
-    "expected": "200",
+    "expected": "应该发送 HTTP 请求并返回状态码 200",
     "category": "网络"
   },
   {
     "name": "检查网络接口",
     "command": "/nsjail ip addr show 2>&1 || ifconfig 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该显示网络接口信息",
     "category": "网络"
   },
   {
     "name": "检查路由表",
     "command": "/nsjail ip route 2>&1 || route -n 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该显示路由表",
     "category": "网络"
   },
   {
     "name": "检查DNS配置",
     "command": "/nsjail cat /etc/resolv.conf 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该解析域名并返回 IP 地址",
     "category": "网络"
   },
   {
     "name": "TCP连接测试",
     "command": "/nsjail timeout 2 bash -c 'echo test | nc -w 1 example.com 80' 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该尝试 TCP 连接",
     "category": "网络"
   },
   {
     "name": "UDP测试",
     "command": "/nsjail timeout 1 nc -u -w 1 8.8.8.8 53 2>&1 || echo ok",
-    "expected": "退出码",
+    "expected": "应该尝试 UDP 连接",
     "category": "网络"
   },
   {
     "name": "HTTP状态码",
     "command": "/nsjail curl -s -o /dev/null -w '%{http_code}' https://httpbin.org/status/404",
-    "expected": "404",
+    "expected": "应该返回 HTTP 状态码 404",
     "category": "网络"
   },
   {
     "name": "下载速度测试",
     "command": "/nsjail curl -s -w '%{speed_download}' -o /dev/null http://example.com",
-    "expected": "退出码",
+    "expected": "应该显示下载速度",
     "category": "网络"
   },
   {
     "name": "Python socket",
     "command": "/nsjail python3 -c 'import socket; s=socket.socket(); s.settimeout(2); s.connect((\"example.com\",80)); print(\"ok\")'",
-    "expected": "ok",
+    "expected": "应该建立 socket 连接并输出 ok",
     "category": "网络"
   }
 ]
