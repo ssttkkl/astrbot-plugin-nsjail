@@ -109,7 +109,6 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/tmp:/tmp:rw",
             "--bindmount", "/sandbox-cache:/sandbox-cache:rw",
-            "--mount_proc",  # 挂载 /proc，供 uv 探测 glibc 版本
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
