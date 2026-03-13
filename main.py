@@ -28,7 +28,7 @@ class NsjailPlugin(Star):
     @filter.llm_tool(name="send_sandbox_image")
     async def send_sandbox_image(self, event: AstrMessageEvent, image_path: str):
         """
-        发送沙箱内的图片到当前会话
+        发送沙箱内的图片到当前会话。图片必须是通过 execute_shell 工具执行命令后产出到沙箱的。
         
         Args:
             image_path(string): 沙箱内的图片路径（相对于 /workspace 或绝对路径）
@@ -60,7 +60,7 @@ class NsjailPlugin(Star):
     @filter.llm_tool(name="send_sandbox_file")
     async def send_sandbox_file(self, event: AstrMessageEvent, file_path: str):
         """
-        发送沙箱内的文件到当前会话
+        发送沙箱内的文件到当前会话。文件必须是通过 execute_shell 工具执行命令后产出到沙箱的。
         
         Args:
             file_path(string): 沙箱内的文件路径（相对于 /workspace 或绝对路径）
