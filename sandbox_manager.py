@@ -109,6 +109,7 @@ class SandboxManager:
             "--bindmount", "/lib64:/lib64:ro",
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
+            "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", "/tmp:/tmp:rw",
             "--bindmount", "/sandbox-cache:/sandbox-cache:rw",
             "--bindmount", "/dev/null:/dev/null:rw",
