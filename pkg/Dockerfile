@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     autoconf bison flex gcc g++ git \
     libprotobuf-dev libnl-route-3-dev \
     libtool make pkg-config protobuf-compiler \
+    gawk procps xxd \
     && cd /tmp \
     && git clone --depth 1 https://github.com/google/nsjail.git \
     && cd nsjail \
