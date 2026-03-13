@@ -108,6 +108,7 @@ class SandboxManager:
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/tmp:/tmp:rw",
+            "--bindmount", "/sandbox-cache:/sandbox-cache:rw",
             "--mount_proc",  # 挂载 /proc，供 uv 探测 glibc 版本
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
@@ -148,7 +149,7 @@ class SandboxManager:
         
         nsjail_cmd.extend([
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
-            "--env", "UV_CACHE_DIR=/tmp/.uv_cache",
+            "--env", "UV_CACHE_DIR=/sandbox-cache/uv",
             "--quiet",
             "--",
             "/bin/bash", "-c", command
