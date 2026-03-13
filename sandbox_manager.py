@@ -71,6 +71,13 @@ class SandboxManager:
         
         os.makedirs(sandbox_dir, exist_ok=True)
         
+        # 创建 .agents 目录和符号链接
+        agents_dir = os.path.join(sandbox_dir, ".agents")
+        os.makedirs(agents_dir, exist_ok=True)
+        skills_link = os.path.join(agents_dir, "skills")
+        if not os.path.exists(skills_link):
+            os.symlink("/skills", skills_link)
+        
         try:
             os.chown(sandbox_dir, 99999, 99999)
             os.chmod(sandbox_dir, 0o755)
