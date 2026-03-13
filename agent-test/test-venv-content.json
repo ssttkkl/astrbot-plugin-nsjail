@@ -1,0 +1,11 @@
+[
+  {
+    "name": "检查venv内容",
+    "commands": [
+      "/nsjail python3 -m venv /workspace/test_venv",
+      "/nsjail ls -la /workspace/test_venv/bin/"
+    ],
+    "expected": "应该显示 venv 目录内容",
+    "category": "测试"
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "测试ensurepip",
+    "command": "/nsjail python3 -m ensurepip --version",
+    "expected": "应该显示 pip 版本",
+    "category": "测试"
+  }
+]

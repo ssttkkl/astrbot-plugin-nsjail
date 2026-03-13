@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Node.js HTTPS请求",
+    "command": "/nsjail node -e 'require(\"https\").get(\"https://example.com\",r=>console.log(r.statusCode))'",
+    "expected": "应该发送 HTTPS 请求并返回状态码 200",
+    "category": "网络"
+  }
+]

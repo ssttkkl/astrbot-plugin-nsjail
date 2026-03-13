@@ -122,19 +122,19 @@
   {
     "name": "进程信息",
     "expected": "应该显示进程列表",
-    "output": "退出码: 0\n输出:\nUSER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n99999          1  0.0  0.1   4064  2944 ?        SNs  19:08   0:00 /bin/bash -c ps aux | head -2\n\n---\n",
+    "output": "退出码: 0\n输出:\nUSER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n99999          1  0.0  0.1   4064  2944 ?        SNs  20:13   0:00 /bin/bash -c ps aux | head -2\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "内存信息",
     "expected": "应该显示内存使用情况或输出 ok",
-    "output": "退出码: 0\n输出:\n               total        used        free      shared  buff/cache   available\nMem:           1.6Gi       991Mi        86Mi        15Mi       789Mi       686Mi\nSwap:             0B          0B          0B\n\n---\n",
+    "output": "退出码: 0\n输出:\n               total        used        free      shared  buff/cache   available\nMem:           1.6Gi       992Mi       142Mi        15Mi       725Mi       684Mi\nSwap:             0B          0B          0B\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "磁盘使用",
     "expected": "应该显示磁盘使用情况",
-    "output": "退出码: 0\n输出:\nFilesystem      Size  Used Avail Use% Mounted on\noverlay          40G   28G  9.6G  75% /workspace\n\n---\n",
+    "output": "退出码: 0\n输出:\nFilesystem      Size  Used Avail Use% Mounted on\noverlay          40G   30G  7.5G  81% /workspace\n\n---\n",
     "category": "Shell"
   },
   {
@@ -158,13 +158,13 @@
   {
     "name": "时间戳",
     "expected": "应该输出 Unix 时间戳（17 开头）",
-    "output": "退出码: 0\n输出:\n1773428907\n\n---\n",
+    "output": "退出码: 0\n输出:\n1773432821\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "随机数",
     "expected": "应该输出随机数",
-    "output": "退出码: 0\n输出:\n5761\n\n---\n",
+    "output": "退出码: 0\n输出:\n14046\n\n---\n",
     "category": "Shell"
   },
   {
@@ -182,7 +182,7 @@
   {
     "name": "Shell case语句",
     "expected": "应该匹配 case 分支输出 two",
-    "output": "退出码: 0\n输出:\n\n---\n",
+    "output": "退出码: 0\n输出:\ntwo\n\n---\n",
     "category": "Shell"
   },
   {

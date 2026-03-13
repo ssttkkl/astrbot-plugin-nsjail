@@ -1,0 +1,11 @@
+[
+  {
+    "name": "创建venv测试",
+    "commands": [
+      "/nsjail python3 -m venv /workspace/test-venv",
+      "/nsjail ls /workspace/test-venv/bin | grep pip"
+    ],
+    "expected": "应该创建 venv 并包含 pip",
+    "category": "测试"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "检查证书文件",
+    "command": "/nsjail ls -la /etc/ssl/certs/ca-certificates.crt",
+    "expected": "应该显示证书文件",
+    "category": "测试"
+  },
+  {
+    "name": "检查NODE_EXTRA_CA_CERTS",
+    "command": "/nsjail env | grep NODE",
+    "expected": "应该显示 NODE_EXTRA_CA_CERTS 环境变量",
+    "category": "测试"
+  }
+]
