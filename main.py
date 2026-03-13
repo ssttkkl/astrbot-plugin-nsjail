@@ -21,6 +21,9 @@ class NsjailPlugin(Star):
         import os
         data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "config")
         self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network, memory_limit_mb, cpu_limit_percent)
+        
+        # 启动清理协程
+        self.cleanup_task = asyncio.create_task(self._cleanup_loop())
     
     @filter.llm_tool(name="send_sandbox_image")
     async def send_sandbox_image(self, event: AstrMessageEvent, image_path: str):
@@ -147,6 +150,19 @@ class NsjailPlugin(Star):
         response = f"退出码: {returncode}\n输出:\n{output}"
         yield event.plain_result(response[:2000])
     
+    async def _cleanup_loop(self):
+        """后台协程：每10分钟清理超过3天的沙箱目录"""
+        while True:
+            try:
+                await asyncio.sleep(600)  # 10分钟
+                self.sandbox_mgr.cleanup_old_sandboxes()
+            except Exception as e:
+                logger.error(f"清理沙箱失败: {e}")
+    
     async def terminate(self):
+        # 取消清理任务
+        if hasattr(self, 'cleanup_task'):
+            self.cleanup_task.cancel()
+        
         for session_id in list(self.sandbox_mgr.sandboxes.keys()):
             self.sandbox_mgr.destroy_sandbox(session_id)

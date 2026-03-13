@@ -61,7 +61,9 @@ class SandboxManager:
         
         uid = self.get_uid_for_session(session_id)
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
-        sandbox_dir = tempfile.mkdtemp(prefix=f'nsjail_{clean_session_id}_')
+        import time
+        timestamp = int(time.time())
+        sandbox_dir = tempfile.mkdtemp(prefix=f'nsjail_{clean_session_id}_{timestamp}_')
         
         try:
             os.chown(sandbox_dir, 99999, 99999)
@@ -69,7 +71,7 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid}
+        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': timestamp}
         logger.info(f'创建沙箱: {sandbox_dir} (UID: {uid})')
         return sandbox_dir, uid
     
@@ -169,3 +171,32 @@ class SandboxManager:
             return "执行超时", -1
         except Exception as e:
             return f"执行错误: {str(e)}", -1
+
+    def cleanup_old_sandboxes(self):
+        """清理超过3天的沙箱目录"""
+        import time
+        import glob
+        
+        current_time = time.time()
+        three_days_ago = current_time - (3 * 24 * 3600)
+        
+        # 查找所有 nsjail_ 开头的临时目录
+        temp_dir = tempfile.gettempdir()
+        pattern = os.path.join(temp_dir, 'nsjail_*')
+        
+        cleaned_count = 0
+        for sandbox_path in glob.glob(pattern):
+            try:
+                # 从目录名提取时间戳
+                parts = os.path.basename(sandbox_path).split('_')
+                if len(parts) >= 3 and parts[-1].isdigit():
+                    timestamp = int(parts[-1])
+                    if timestamp < three_days_ago:
+                        shutil.rmtree(sandbox_path)
+                        logger.info(f"清理过期沙箱: {sandbox_path}")
+                        cleaned_count += 1
+            except Exception as e:
+                logger.warning(f"清理沙箱失败 {sandbox_path}: {e}")
+        
+        if cleaned_count > 0:
+            logger.info(f"清理了 {cleaned_count} 个过期沙箱")
