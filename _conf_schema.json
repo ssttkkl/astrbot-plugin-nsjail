@@ -22,5 +22,17 @@
     "type": "int",
     "default": -1,
     "hint": "沙箱 CPU 使用率限制，-1 表示不限制，1-100 表示限制的百分比。需要 Cgroup V2 支持"
+  },
+  "data_write_permission": {
+    "description": "/data 目录写入权限",
+    "type": "str",
+    "default": "none",
+    "hint": "控制沙箱内 /data 目录的写入权限。选项：all（所有人可写）、admin（仅管理员可写）、none（只读）"
+  },
+  "skills_write_permission": {
+    "description": "/skills 目录写入权限",
+    "type": "str",
+    "default": "none",
+    "hint": "控制沙箱内 /skills 目录的写入权限。选项：all（所有人可写）、admin（仅管理员可写）、none（只读）"
   }
 }

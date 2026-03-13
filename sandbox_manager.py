@@ -10,12 +10,14 @@ from astrbot.api import logger
 
 class SandboxManager:
     """沙箱管理器"""
-    def __init__(self, data_dir: str, max_timeout: int = 60, enable_network: bool = False, memory_limit_mb: int = -1, cpu_limit_percent: int = -1):
+    def __init__(self, data_dir: str, max_timeout: int = 60, enable_network: bool = False, memory_limit_mb: int = -1, cpu_limit_percent: int = -1, data_write_permission: str = "none", skills_write_permission: str = "none"):
         self.sandboxes = {}
         self.max_timeout = max_timeout
         self.enable_network = enable_network
         self.memory_limit_mb = memory_limit_mb
         self.cpu_limit_percent = cpu_limit_percent
+        self.data_write_permission = data_write_permission
+        self.skills_write_permission = skills_write_permission
         self.workspaces_dir = "/AstrBot/data/nsjail/workspaces"
         os.makedirs(self.workspaces_dir, exist_ok=True)
         self.uid_map_file = os.path.join(data_dir, "nsjail_uid_map.json")
@@ -91,7 +93,7 @@ class SandboxManager:
             shutil.rmtree(info['dir'])
             logger.info(f"销毁沙箱: {info['dir']}")
     
-    async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30) -> tuple[str, int]:
+    async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
         timeout = min(timeout, self.max_timeout)
         
@@ -100,6 +102,13 @@ class SandboxManager:
             sandbox_dir, uid = self.create_sandbox(session_id)
         
         astrbot_skills_dir = "/AstrBot/data/skills"
+        
+        # 根据配置和用户权限决定 /data 目录挂载权限
+        data_mount_mode = "ro"
+        if self.data_write_permission == "all":
+            data_mount_mode = "rw"
+        elif self.data_write_permission == "admin" and is_admin:
+            data_mount_mode = "rw"
         
         nsjail_cmd = [
             "nsjail",
@@ -115,7 +124,7 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", "/tmp:/tmp:rw",
-            "--bindmount", "/AstrBot/data/nsjail/data:/data:ro",
+            "--bindmount", f"/AstrBot/data/nsjail/data:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
@@ -133,8 +142,15 @@ class SandboxManager:
             if os.path.exists("/etc/ca-certificates"):
                 nsjail_cmd.extend(["--bindmount", "/etc/ca-certificates:/etc/ca-certificates:ro"])
         
+        # 根据配置和用户权限决定 /skills 目录挂载权限
+        skills_mount_mode = "ro"
+        if self.skills_write_permission == "all":
+            skills_mount_mode = "rw"
+        elif self.skills_write_permission == "admin" and is_admin:
+            skills_mount_mode = "rw"
+        
         if os.path.exists(astrbot_skills_dir):
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:ro"])
+            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/skills:{skills_mount_mode}"])
         
         nsjail_cmd.extend([
             "--cwd", "/workspace",

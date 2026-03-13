@@ -17,10 +17,12 @@ class NsjailPlugin(Star):
         enable_network = config.get("enable_network", False)
         memory_limit_mb = config.get("memory_limit_mb", -1)
         cpu_limit_percent = config.get("cpu_limit_percent", -1)
+        data_write_permission = config.get("data_write_permission", "none")
+        skills_write_permission = config.get("skills_write_permission", "none")
         
         import os
         data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "config")
-        self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network, memory_limit_mb, cpu_limit_percent)
+        self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network, memory_limit_mb, cpu_limit_percent, data_write_permission, skills_write_permission)
         
         # 启动清理协程
         self.cleanup_task = asyncio.create_task(self._cleanup_loop())
@@ -100,7 +102,8 @@ class NsjailPlugin(Star):
             timeout(number): 超时时间(秒)，默认30秒
         """
         session_id = event.session_id or "default"
-        output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
+        is_admin = event.role == "admin"
+        output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
         return f"$ {command}\n{output}\n退出码: {code}"
     
     @filter.command("nsjail")
@@ -124,7 +127,8 @@ class NsjailPlugin(Star):
             return
         
         session_id = event.session_id or "default"
-        output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command)
+        is_admin = event.role == "admin"
+        output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, is_admin=is_admin)
         
         response = f"退出码: {returncode}\n输出:\n{output}"
         yield event.plain_result(response[:2000])
