@@ -108,6 +108,9 @@ class SandboxManager:
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/tmp:/tmp:rw",
+            "--mount_proc",  # 挂载 /proc，供 uv 探测 glibc 版本
+            "--bindmount", "/dev/null:/dev/null:rw",
+            "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
         
         # 网络配置：默认隔离，配置启用时才共享宿主网络
