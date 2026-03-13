@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /tmp/nsjail
 
 # 安装 Python 包管理工具和虚拟环境
-RUN apt-get install -y python3-virtualenv \
+RUN apt-get install -y python3-virtualenv python3.13-venv \
     && pip3 install --no-cache-dir --break-system-packages uv pdm poetry
 
 # 安装 Playwright 及其依赖

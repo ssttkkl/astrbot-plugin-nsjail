@@ -1,104 +1,104 @@
 [
   {
     "name": "Node版本",
-    "command": "/nsjail node --version",
     "expected": "应该输出 Node.js 版本号（v 开头）",
+    "output": "退出码: 0\n输出:\nv24.14.0\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node计算",
-    "command": "/nsjail node -e 'console.log(Math.pow(2,10))'",
     "expected": "应该计算 2 的 10 次方得到 1024",
+    "output": "退出码: 0\n输出:\n1024\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node数组",
-    "command": "/nsjail node -e 'console.log([1,2,3].length)'",
     "expected": "应该返回数组长度 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node对象",
-    "command": "/nsjail node -e 'console.log({a:1}.a)'",
     "expected": "应该访问对象属性返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node字符串",
-    "command": "/nsjail node -e 'console.log(\"hello\".toUpperCase())'",
     "expected": "应该转换为大写 HELLO",
+    "output": "退出码: 0\n输出:\nHELLO\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node JSON",
-    "command": "/nsjail node -e 'console.log(JSON.stringify({a:1}))'",
     "expected": "应该序列化为 JSON 字符串",
+    "output": "退出码: 0\n输出:\n{\"a\":1}\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node map",
-    "command": "/nsjail node -e 'console.log([1,2,3].map(x=>x*2))'",
     "expected": "应该映射数组元素乘以 2",
+    "output": "退出码: 0\n输出:\n[ 2, 4, 6 ]\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node filter",
-    "command": "/nsjail node -e 'console.log([1,2,3,4].filter(x=>x>2))'",
     "expected": "应该过滤出大于 2 的元素",
+    "output": "退出码: 0\n输出:\n[ 3, 4 ]\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node reduce",
-    "command": "/nsjail node -e 'console.log([1,2,3].reduce((a,b)=>a+b))'",
     "expected": "应该累加数组元素得到 6",
+    "output": "退出码: 0\n输出:\n6\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node箭头函数",
-    "command": "/nsjail node -e 'const f=x=>x*2; console.log(f(5))'",
     "expected": "应该调用箭头函数返回 10",
+    "output": "退出码: 0\n输出:\n10\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node模板字符串",
-    "command": "/nsjail node -e 'const x=5; console.log(`x=${x}`)'",
-    "expected": "应该输出 x=5",
+    "expected": "应该转换为大写 HELLO",
+    "output": "退出码: 0\n输出:\nx=5\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node解构",
-    "command": "/nsjail node -e 'const {a}={a:1}; console.log(a)'",
     "expected": "应该解构对象返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node扩展运算符",
-    "command": "/nsjail node -e 'console.log([...[1,2],...[3,4]])'",
     "expected": "应该合并数组",
+    "output": "退出码: 0\n输出:\n[ 1, 2, 3, 4 ]\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node Promise",
-    "command": "/nsjail node -e 'Promise.resolve(42).then(console.log)'",
     "expected": "应该解析 Promise 返回 42",
+    "output": "退出码: 0\n输出:\n42\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node async",
-    "command": "/nsjail node -e '(async()=>console.log(await Promise.resolve(1)))()'",
     "expected": "应该执行异步函数返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node Set",
-    "command": "/nsjail node -e 'console.log(new Set([1,2,2,3]).size)'",
     "expected": "应该创建 Set 并返回大小 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
     "category": "Node.js"
   },
   {
     "name": "Node Map",
-    "command": "/nsjail node -e 'const m=new Map(); m.set(\"a\",1); console.log(m.get(\"a\"))'",
     "expected": "应该创建 Map 并获取值 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
     "category": "Node.js"
   }
 ]
