@@ -130,6 +130,7 @@ class SandboxManager:
             "--cwd", "/workspace",
             "--time_limit", str(timeout),
             "--rlimit_fsize", "100",
+            "--rlimit_nproc", "50",
         ])
         
         # 使用 Cgroup V2 进行资源限制（如果配置了）
