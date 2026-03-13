@@ -1,5 +1,6 @@
 import asyncio
 import re
+import os
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger, AstrBotConfig
@@ -20,6 +21,69 @@ class NsjailPlugin(Star):
         import os
         data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "config")
         self.sandbox_mgr = SandboxManager(data_dir, max_timeout, enable_network, memory_limit_mb, cpu_limit_percent)
+    
+    @filter.llm_tool(name="send_sandbox_image")
+    async def send_sandbox_image(self, event: AstrMessageEvent, image_path: str):
+        """
+        发送沙箱内的图片到当前会话
+        
+        Args:
+            image_path(string): 沙箱内的图片路径（相对于 /workspace 或绝对路径）
+        """
+        session_id = event.session_id or "default"
+        
+        # 获取沙箱真实目录
+        if session_id not in self.sandbox_mgr.sandboxes:
+            return "错误: 沙箱未初始化"
+        
+        sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
+        
+        # 转换路径
+        if image_path.startswith('/workspace/'):
+            real_path = os.path.join(sandbox_dir, image_path[11:])
+        elif image_path.startswith('/workspace'):
+            real_path = os.path.join(sandbox_dir, image_path[10:])
+        else:
+            real_path = os.path.join(sandbox_dir, image_path.lstrip('/'))
+        
+        if not os.path.exists(real_path):
+            return f"错误: 图片文件不存在: {image_path}"
+        
+        # 发送图片
+        yield event.image_result(real_path)
+        return f"已发送图片: {image_path}"
+    
+    @filter.llm_tool(name="send_sandbox_file")
+    async def send_sandbox_file(self, event: AstrMessageEvent, file_path: str):
+        """
+        发送沙箱内的文件到当前会话
+        
+        Args:
+            file_path(string): 沙箱内的文件路径（相对于 /workspace 或绝对路径）
+        """
+        session_id = event.session_id or "default"
+        
+        # 获取沙箱真实目录
+        if session_id not in self.sandbox_mgr.sandboxes:
+            return "错误: 沙箱未初始化"
+        
+        sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
+        
+        # 转换路径
+        if file_path.startswith('/workspace/'):
+            real_path = os.path.join(sandbox_dir, file_path[11:])
+        elif file_path.startswith('/workspace'):
+            real_path = os.path.join(sandbox_dir, file_path[10:])
+        else:
+            real_path = os.path.join(sandbox_dir, file_path.lstrip('/'))
+        
+        if not os.path.exists(real_path):
+            return f"错误: 文件不存在: {file_path}"
+        
+        # 发送文件
+        file_name = os.path.basename(real_path)
+        yield event.chain_result([Comp.File(file=real_path, name=file_name)])
+        return f"已发送文件: {file_path}"
     
     @filter.llm_tool(name="execute_shell")
     async def execute_shell(self, event: AstrMessageEvent, command: str, timeout: int = 30):
@@ -55,26 +119,6 @@ class NsjailPlugin(Star):
         """
         session_id = event.session_id or "default"
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
-        
-        # 处理图片发送标记
-        image_match = re.search(r'__ASTRBOT_SEND_IMAGE__:(.+?)(?:\n|$)', output)
-        if image_match:
-            image_path = image_match.group(1).strip()
-            # 移除标记
-            output = re.sub(r'__ASTRBOT_SEND_IMAGE__:.+?(?:\n|$)', '', output)
-            # 发送图片
-            yield event.image_result(image_path)
-        
-        # 处理文件发送标记
-        file_match = re.search(r'__ASTRBOT_SEND_FILE__:(.+?):(.+?)(?:\n|$)', output)
-        if file_match:
-            file_path = file_match.group(1).strip()
-            file_name = file_match.group(2).strip()
-            # 移除标记
-            output = re.sub(r'__ASTRBOT_SEND_FILE__:.+?(?:\n|$)', '', output)
-            # 发送文件
-            yield event.chain_result([Comp.File(file=file_path, name=file_name)])
-        
         return f"$ {command}\n{output}\n退出码: {code}"
     
     @filter.command("nsjail")
