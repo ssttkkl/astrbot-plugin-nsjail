@@ -145,6 +145,7 @@ class SandboxManager:
         
         nsjail_cmd.extend([
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+            "--env", "UV_CACHE_DIR=/tmp/.uv_cache",
             "--quiet",
             "--",
             "/bin/bash", "-c", command
