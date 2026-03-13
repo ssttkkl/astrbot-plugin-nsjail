@@ -63,7 +63,9 @@ class SandboxManager:
         
         uid = self.get_uid_for_session(session_id)
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
-        sandbox_dir = os.path.join(self.workspaces_dir, clean_session_id)
+        import time
+        timestamp = int(time.time())
+        sandbox_dir = os.path.join(self.workspaces_dir, f"{clean_session_id}_{timestamp}")
         
         os.makedirs(sandbox_dir, exist_ok=True)
         
@@ -73,8 +75,7 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        import time
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': int(time.time())}
+        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': timestamp}
         logger.info(f'创建沙箱: {sandbox_dir} (UID: {uid})')
         return sandbox_dir, uid
     
@@ -192,17 +193,16 @@ class SandboxManager:
         current_time = time.time()
         three_days_ago = current_time - (3 * 24 * 3600)
         
-        # 查找所有 nsjail_ 开头的临时目录
-        temp_dir = tempfile.gettempdir()
-        pattern = os.path.join(temp_dir, 'nsjail_*')
+        pattern = os.path.join(self.workspaces_dir, '*_*')
         
         cleaned_count = 0
         for sandbox_path in glob.glob(pattern):
             try:
                 # 从目录名提取时间戳
-                parts = os.path.basename(sandbox_path).split('_')
-                if len(parts) >= 3 and parts[-1].isdigit():
-                    timestamp = int(parts[-1])
+                basename = os.path.basename(sandbox_path)
+                timestamp_str = basename.split('_')[-1]
+                if timestamp_str.isdigit():
+                    timestamp = int(timestamp_str)
                     if timestamp < three_days_ago:
                         shutil.rmtree(sandbox_path)
                         logger.info(f"清理过期沙箱: {sandbox_path}")
