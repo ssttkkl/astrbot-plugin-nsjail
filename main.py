@@ -1,8 +1,10 @@
 import asyncio
+import re
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger, AstrBotConfig
 from astrbot.core.message.message_event_result import MessageChain
+import astrbot.api.message_components as Comp
 from .sandbox_manager import SandboxManager
 
 
@@ -53,6 +55,26 @@ class NsjailPlugin(Star):
         """
         session_id = event.session_id or "default"
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout)
+        
+        # 处理图片发送标记
+        image_match = re.search(r'__ASTRBOT_SEND_IMAGE__:(.+?)(?:\n|$)', output)
+        if image_match:
+            image_path = image_match.group(1).strip()
+            # 移除标记
+            output = re.sub(r'__ASTRBOT_SEND_IMAGE__:.+?(?:\n|$)', '', output)
+            # 发送图片
+            yield event.image_result(image_path)
+        
+        # 处理文件发送标记
+        file_match = re.search(r'__ASTRBOT_SEND_FILE__:(.+?):(.+?)(?:\n|$)', output)
+        if file_match:
+            file_path = file_match.group(1).strip()
+            file_name = file_match.group(2).strip()
+            # 移除标记
+            output = re.sub(r'__ASTRBOT_SEND_FILE__:.+?(?:\n|$)', '', output)
+            # 发送文件
+            yield event.chain_result([Comp.File(file=file_path, name=file_name)])
+        
         return f"$ {command}\n{output}\n退出码: {code}"
     
     @filter.command("nsjail")
