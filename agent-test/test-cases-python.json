@@ -215,10 +215,10 @@
   {
     "name": "创建venv并安装包",
     "commands": [
-      "/nsjail /usr/bin/python3 -m venv /workspace/myenv",
+      "/nsjail python3 -m venv /workspace/myenv",
       "/nsjail ls /workspace/myenv/bin",
       "/nsjail /workspace/myenv/bin/pip install requests",
-      "/nsjail /workspace/myenv/bin/python -c 'import requests; print(requests.__version__)'"
+      "/nsjail /workspace/myenv/bin/python -c \"import requests; print(requests.__version__)\""
     ],
     "expected": "应该创建虚拟环境、安装 requests 包并输出版本号",
     "category": "Python"
@@ -226,7 +226,7 @@
   {
     "name": "venv中运行脚本",
     "commands": [
-      "/nsjail /usr/bin/python3 -m venv /workspace/testenv",
+      "/nsjail python3 -m venv /workspace/testenv",
       "/nsjail bash -c 'echo \"print(\\\"hello from venv\\\")\" > /workspace/test.py'",
       "/nsjail /workspace/testenv/bin/python /workspace/test.py"
     ],
