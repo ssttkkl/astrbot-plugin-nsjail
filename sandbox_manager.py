@@ -159,6 +159,8 @@ class SandboxManager:
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
             "--env", "UV_CACHE_DIR=/sandbox-cache/uv",
             "--env", "HOME=/workspace",
+            "--env", "NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt",
+            "--env", "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt",
             "--quiet",
             "--",
             "/bin/bash", "-c", command
