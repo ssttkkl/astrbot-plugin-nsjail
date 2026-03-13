@@ -37,7 +37,8 @@ class NsjailPlugin(Star):
         
         # 获取沙箱真实目录
         if session_id not in self.sandbox_mgr.sandboxes:
-            return "错误: 沙箱未初始化"
+            yield event.plain_result("错误: 沙箱未初始化")
+            return
         
         sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
         
@@ -50,11 +51,11 @@ class NsjailPlugin(Star):
             real_path = os.path.join(sandbox_dir, image_path.lstrip('/'))
         
         if not os.path.exists(real_path):
-            return f"错误: 图片文件不存在: {image_path}"
+            yield event.plain_result(f"错误: 图片文件不存在: {image_path}")
+            return
         
         # 发送图片
         yield event.image_result(real_path)
-        return f"已发送图片: {image_path}"
     
     @filter.llm_tool(name="send_sandbox_file")
     async def send_sandbox_file(self, event: AstrMessageEvent, file_path: str):
@@ -68,7 +69,8 @@ class NsjailPlugin(Star):
         
         # 获取沙箱真实目录
         if session_id not in self.sandbox_mgr.sandboxes:
-            return "错误: 沙箱未初始化"
+            yield event.plain_result("错误: 沙箱未初始化")
+            return
         
         sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
         
@@ -81,12 +83,12 @@ class NsjailPlugin(Star):
             real_path = os.path.join(sandbox_dir, file_path.lstrip('/'))
         
         if not os.path.exists(real_path):
-            return f"错误: 文件不存在: {file_path}"
+            yield event.plain_result(f"错误: 文件不存在: {file_path}")
+            return
         
         # 发送文件
         file_name = os.path.basename(real_path)
         yield event.chain_result([Comp.File(file=real_path, name=file_name)])
-        return f"已发送文件: {file_path}"
     
     @filter.llm_tool(name="execute_shell")
     async def execute_shell(self, event: AstrMessageEvent, command: str, timeout: int = 30):
