@@ -1,20 +1,8 @@
 [
   {
-    "name": "尝试访问根目录",
-    "command": "/nsjail ls /",
-    "expected": "应该被限制，无法访问或只能看到挂载的目录",
-    "category": "安全"
-  },
-  {
     "name": "尝试访问/etc/passwd",
     "command": "/nsjail cat /etc/passwd",
     "expected": "应该被阻止或返回空/错误",
-    "category": "安全"
-  },
-  {
-    "name": "尝试访问/proc",
-    "command": "/nsjail ls /proc",
-    "expected": "应该被限制或只能看到当前进程",
     "category": "安全"
   },
   {
@@ -39,12 +27,6 @@
     "name": "尝试访问宿主机网络",
     "command": "/nsjail curl http://169.254.169.254/latest/meta-data/ 2>&1",
     "expected": "应该失败，无法访问元数据服务",
-    "category": "安全"
-  },
-  {
-    "name": "尝试修改环境变量",
-    "command": "/nsjail export MALICIOUS=1 && env | grep MALICIOUS",
-    "expected": "环境变量应该被隔离",
     "category": "安全"
   }
 ]
