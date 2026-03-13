@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libtool make pkg-config protobuf-compiler \
     gawk procps xxd \
     dnsutils iputils-ping wget iproute2 netcat-openbsd \
+    debianutils telnet \
     && cd /tmp \
     && git clone --depth 1 https://github.com/google/nsjail.git \
     && cd nsjail \
