@@ -16,6 +16,8 @@ class SandboxManager:
         self.enable_network = enable_network
         self.memory_limit_mb = memory_limit_mb
         self.cpu_limit_percent = cpu_limit_percent
+        self.workspaces_dir = "/AstrBot/data/nsjail/workspaces"
+        os.makedirs(self.workspaces_dir, exist_ok=True)
         self.uid_map_file = os.path.join(data_dir, "nsjail_uid_map.json")
         self.uid_map = self._load_uid_map()
     
@@ -61,9 +63,9 @@ class SandboxManager:
         
         uid = self.get_uid_for_session(session_id)
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
-        import time
-        timestamp = int(time.time())
-        sandbox_dir = tempfile.mkdtemp(prefix=f'nsjail_{clean_session_id}_{timestamp}_')
+        sandbox_dir = os.path.join(self.workspaces_dir, clean_session_id)
+        
+        os.makedirs(sandbox_dir, exist_ok=True)
         
         try:
             os.chown(sandbox_dir, 99999, 99999)
@@ -71,7 +73,8 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': timestamp}
+        import time
+        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': int(time.time())}
         logger.info(f'创建沙箱: {sandbox_dir} (UID: {uid})')
         return sandbox_dir, uid
     
@@ -111,7 +114,7 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", "/tmp:/tmp:rw",
-            "--bindmount", "/sandbox-cache:/sandbox-cache:rw",
+            "--bindmount", "/AstrBot/data/nsjail/data:/data:ro",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
@@ -157,7 +160,7 @@ class SandboxManager:
         
         nsjail_cmd.extend([
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
-            "--env", "UV_CACHE_DIR=/sandbox-cache/uv",
+            "--env", "UV_CACHE_DIR=/data/uv",
             "--env", "HOME=/workspace",
             "--env", "NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt",
             "--env", "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt",
