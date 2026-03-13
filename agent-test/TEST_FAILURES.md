@@ -1,176 +1,148 @@
 # AstrBot NsJail 插件测试失败用例汇总
 
-**生成时间**: 2026-03-13 00:25  
+**生成时间**: 2026-03-13 22:37  
 **测试环境**: AstrBot nsjail 沙箱  
-**总失败数**: 44个
+**总失败数**: 23个
 
 ---
 
-## Python (6个失败)
+## Python (2个失败)
 
-### requests库-GET
-- **输入**: HTTP GET 请求应该返回状态码 200
-- **输出**: `Temporary failure in name resolution`
-- **失败原因**: DNS 解析失败，沙箱环境网络隔离
+### 创建venv并安装包
+- **输入**: 创建虚拟环境并安装包
+- **输出**: `Error: Command '['/workspace/venv/bin/python3', '-m', 'ensurepip']' returned non-zero exit status 1.`
+- **失败原因**: Python 3.13 缺少 ensurepip 模块，无法创建虚拟环境
 
-### requests库-POST
-- **输入**: POST 请求应该返回 JSON 中的 key 字段值 value
-- **输出**: `Temporary failure in name resolution`
-- **失败原因**: DNS 解析失败，沙箱环境网络隔离
-
-### httpx同步请求
-- **输入**: HTTP 请求应该返回状态码 200
-- **输出**: 网络连接失败
-- **失败原因**: 沙箱环境网络隔离
-
-### aiohttp客户端
-- **输入**: 异步 HTTP 请求应该返回状态码 200
-- **输出**: DNS 解析失败
-- **失败原因**: 沙箱环境网络隔离
-
-### fastapi路由定义
-- **输入**: 应该返回字典包含 Hello 键
-- **输出**: `ModuleNotFoundError: No module named 'fastapi'`
-- **失败原因**: 容器内未安装 fastapi 模块
-
-### typer CLI
-- **输入**: 应该输出 Hello World
-- **输出**: `ModuleNotFoundError: No module named 'typer'`
-- **失败原因**: 容器内未安装 typer 模块
+### venv中运行脚本
+- **输入**: 在虚拟环境中运行脚本
+- **输出**: venv 创建失败，但脚本仍执行并输出 "hello from venv"
+- **失败原因**: 虚拟环境创建失败（同上）
 
 ---
 
-## Shell (12个失败)
+## Shell (5个失败)
 
 ### awk处理
 - **输入**: 应该提取第二列输出 2
-- **输出**: `awk: command not found`
+- **输出**: `awk: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 awk 命令
 
 ### which命令
 - **输入**: 应该找到 python3 的路径
-- **输出**: `which: command not found`
+- **输出**: `which: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 which 命令
 
 ### 用户信息
 - **输入**: 应该显示当前用户名
-- **输出**: `whoami: cannot find name for user ID 99999`
+- **输出**: `whoami: cannot find name for user ID 99999`, 退出码 1
 - **失败原因**: UID 99999 在容器内没有对应的用户名
 
-### Shell函数定义
-- **输入**: 应该定义函数并调用返回 10
-- **输出**: 算术语法错误
-- **失败原因**: Shell 算术表达式转义问题
-
-### Shell数组操作
-- **输入**: 应该访问数组元素返回 b
-- **输出**: 数组语法未展开
-- **失败原因**: Bash 数组语法在命令中未正确解析
-
-### Shell关联数组
-- **输入**: 应该访问关联数组返回 value
-- **输出**: 关联数组语法未展开
-- **失败原因**: Bash 关联数组语法在命令中未正确解析
-
-### Shell字符串截取
-- **输入**: 应该截取字符串返回 ell
-- **输出**: 字符串截取语法未展开
-- **失败原因**: Bash 字符串截取语法在命令中未正确解析
-
-### Shell参数展开
-- **输入**: 应该使用默认值返回 test
-- **输出**: 参数展开语法未展开
-- **失败原因**: Bash 参数展开语法在命令中未正确解析
-
-### Shell进程替换
-- **输入**: 应该比较两个命令输出，发现不同
-- **输出**: `/dev/fd/63: No such file or directory`
-- **失败原因**: /dev/fd 在沙箱中不可访问
-
-### Shell算术运算
-- **输入**: 应该计算表达式返回 70
-- **输出**: 算术语法错误
-- **失败原因**: 转义导致算术表达式解析失败
+### Shell case语句
+- **输入**: 应该输出 "two"
+- **输出**: 空输出
+- **失败原因**: case 语句逻辑错误或变量未正确传递
 
 ### 十六进制
 - **输入**: 应该转换为十六进制 68656c6c6f
-- **输出**: `xxd: command not found`
+- **输出**: `xxd: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 xxd 命令
 
 ---
 
-## 网络 (9个失败)
+## 网络 (12个失败)
 
 ### DNS解析-百度
 - **输入**: 应该解析域名并返回 IP 地址
-- **输出**: `nslookup: command not found`
+- **输出**: `nslookup: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 nslookup 命令
 
 ### DNS解析-Google
 - **输入**: 应该解析域名并返回 IP 地址
-- **输出**: `nslookup: command not found`
+- **输出**: `nslookup: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 nslookup 命令
 
 ### ping本地
 - **输入**: 应该 ping 成功，显示发送和接收的包数
-- **输出**: `ping: command not found`
+- **输出**: `ping: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 ping 命令
 
-### curl百度
-- **输入**: 应该返回 HTTP 状态码 200 或 30x
-- **输出**: 退出码 23，返回 301
-- **失败原因**: curl 返回正确状态码但退出码 23 表示写入错误
+### wget测试
+- **输入**: 应该下载文件
+- **输出**: `wget: command not found`, 退出码 127
+- **失败原因**: 容器内缺少 wget 命令
+
+### netcat监听
+- **输入**: 应该启动 netcat 监听
+- **输出**: `nc: command not found`, 退出码 127
+- **失败原因**: 容器内缺少 nc (netcat) 命令
+
+### telnet测试
+- **输入**: 应该测试 telnet 连接
+- **输出**: `telnet: command not found`, 退出码 127
+- **失败原因**: 容器内缺少 telnet 命令
+
+### Node.js HTTP请求
+- **输入**: 应该发送 HTTP 请求并返回状态码 200
+- **输出**: 进程被杀死，退出码 137
+- **失败原因**: 超时或内存限制
+
+### Node.js HTTPS请求
+- **输入**: 应该发送 HTTPS 请求并返回状态码 200
+- **输出**: `unable to verify the first certificate`
+- **失败原因**: SSL 证书验证失败
+
+### 检查网络接口
+- **输入**: 应该显示网络接口信息
+- **输出**: `ip: command not found` 和 `ifconfig: command not found`, 退出码 127
+- **失败原因**: 容器内缺少 ip 和 ifconfig 命令
+
+### 检查路由表
+- **输入**: 应该显示路由表
+- **输出**: `ip: command not found` 和 `route: command not found`, 退出码 127
+- **失败原因**: 容器内缺少 ip 和 route 命令
 
 ### TCP连接测试
 - **输入**: 应该尝试 TCP 连接
-- **输出**: `nc: command not found`
+- **输出**: `nc: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 nc (netcat) 命令
 
 ### UDP测试
 - **输入**: 应该尝试 UDP 连接
-- **输出**: `nc: command not found`
+- **输出**: `nc: command not found`, 退出码 127
 - **失败原因**: 容器内缺少 nc (netcat) 命令
 
-### 下载速度测试
-- **输入**: 应该显示下载速度
-- **输出**: 退出码 23，速度为 0
-- **失败原因**: curl 写入错误导致下载失败
+---
 
-### Node.js HTTP请求
-- **输入**: 应该发送 HTTP 请求并返回状态码 200
-- **输出**: `Fatal process out of memory: SegmentedTable::InitializeTable`
-- **失败原因**: Node.js 进程内存不足，512MB 限制过低
+## Node.js (1个失败)
 
-### Node.js HTTPS请求
-- **输入**: 应该发送 HTTPS 请求并返回状态码 200
-- **输出**: `Fatal process out of memory: SegmentedTable::InitializeTable`
-- **失败原因**: Node.js 进程内存不足，512MB 限制过低
+### Node模板字符串
+- **输入**: 应该输出 "HELLO"
+- **输出**: `x=5`
+- **失败原因**: 测试用例逻辑错误或变量未正确传递
 
 ---
 
-## Node.js (16个失败)
+## 安全 (4个失败)
 
-所有 Node.js 测试（除版本查询外）均因相同原因失败：
+### 尝试访问根目录
+- **输入**: 应该被限制，无法访问或只能看到挂载的目录
+- **输出**: 可以访问根目录，看到完整文件系统：`AstrBot bin dev etc lib lib64 proc sandbox-cache sbin tmp usr workspace`
+- **失败原因**: 根目录未正确隔离，可能泄露系统信息
 
-### 通用失败模式
-- **输入**: 执行任何 JavaScript 代码
-- **输出**: `Fatal process out of memory: SegmentedTable::InitializeTable (subspace allocation)`, 退出码 133
-- **失败原因**: Node.js V8 引擎初始化需要超过 512MB 内存，当前 nsjail 内存限制过低
+### 尝试访问/proc
+- **输入**: 应该被限制或只能看到当前进程
+- **输出**: 可以看到完整的 /proc 文件系统，包含所有系统进程信息
+- **失败原因**: /proc 文件系统未隔离，存在信息泄露风险
 
-**受影响的测试**:
-- Node计算、数组、对象、字符串、JSON
-- map、filter、reduce、箭头函数
-- 模板字符串、解构、扩展运算符
-- Promise、async/await、Set、Map
+### 尝试fork炸弹
+- **输入**: 应该被限制或超时
+- **输出**: 成功执行并输出 `done`
+- **失败原因**: 进程数限制不够严格，缺少 `--rlimit_nproc` 限制
 
----
-
-## 安全 (1个失败)
-
-### Fork炸弹
-- **输入**: 应该被进程数限制阻止
-- **输出**: 虽然 /dev/null 被阻止，但进程仍能 fork
-- **失败原因**: 缺少 `--rlimit_nproc` 限制，进程数未受控
+### 尝试修改环境变量
+- **输入**: 环境变量应该被隔离
+- **输出**: 成功设置并读取 `MALICIOUS=1`
+- **失败原因**: 环境变量未隔离，可能影响后续命令执行
 
 ---
 
@@ -178,19 +150,18 @@
 
 | 原因类别 | 数量 | 占比 |
 |---------|------|------|
-| 缺少命令工具 | 10 | 22.7% |
-| Node.js 内存不足 | 16 | 36.4% |
-| 网络隔离 | 4 | 9.1% |
-| Shell 语法问题 | 6 | 13.6% |
-| 缺少 Python 模块 | 2 | 4.5% |
-| /dev 文件系统限制 | 2 | 4.5% |
-| 其他 | 4 | 9.1% |
+| 缺少命令工具 | 12 | 52.2% |
+| 安全隔离不足 | 4 | 17.4% |
+| Python venv 问题 | 2 | 8.7% |
+| Shell 语法/逻辑 | 2 | 8.7% |
+| Node.js 问题 | 2 | 8.7% |
+| 其他 | 1 | 4.3% |
 
 ---
 
 ## 改进建议
 
-### 1. 安装缺失工具
+### 1. 安装缺失工具（高优先级）
 ```bash
 apt-get install -y \
   gawk \
@@ -198,37 +169,66 @@ apt-get install -y \
   dnsutils \
   net-tools \
   netcat-openbsd \
-  xxd
+  xxd \
+  wget \
+  telnet \
+  iproute2
 ```
 
-### 2. 增加内存限制
+### 2. 加强安全隔离（高优先级）
 ```python
-"--rlimit_as", "2048",  # 从 512MB 增加到 2048MB
+# 添加进程数限制
+"--rlimit_nproc", "50",
+
+# 考虑使用 chroot 或更严格的文件系统隔离
+# 限制 /proc 访问范围
 ```
 
-### 3. 添加进程数限制
-```python
-"--rlimit_nproc", "50",  # 限制最大进程数
-```
-
-### 4. 安装 Python 模块
+### 3. 修复 Python venv 问题（中优先级）
 ```bash
-pip install fastapi typer
+# 安装 python3-venv 包
+apt-get install -y python3.13-venv
 ```
 
-### 5. 修复 Shell 语法测试
-- 使用文件方式而非命令行参数
-- 避免复杂的转义和参数展开
+### 4. 优化 Node.js 支持（中优先级）
+- 检查 SSL 证书配置
+- 优化内存使用或增加限制
+
+### 5. 修复测试用例（低优先级）
+- Shell case 语句测试
+- Node.js 模板字符串测试
+
+---
+
+## 测试通过率汇总
+
+| 测试类别 | 通过/总数 | 通过率 |
+|---------|----------|--------|
+| 文件操作 | 20/20 | 100% |
+| Python | 33/35 | 94.3% |
+| Node.js | 16/17 | 94.1% |
+| Shell | 35/40 | 87.5% |
+| 安全 | 4/8 | 50% |
+| 网络 | 8/20 | 40% |
+| **总计** | **116/139** | **83.5%** |
 
 ---
 
 ## 结论
 
-**核心功能正常**: 文件操作 (100%)、基础 Python (81%)、基础 Shell (75%)
+**核心功能正常**: 文件操作 (100%)、Python (94.3%)、Node.js (94.1%)、Shell (87.5%)
 
-**需要改进**: Node.js 支持、网络工具、高级 Shell 语法
+**安全问题**: 
+- 🔴 高风险：根目录和 /proc 未隔离
+- 🟡 中风险：fork 炸弹无限制
+- 🟡 中风险：环境变量未隔离
+
+**功能缺失**: 
+- 网络诊断工具（nslookup、ping、wget、nc 等）
+- Shell 工具（awk、which、xxd）
+- Python venv 支持
 
 **优先级**:
-1. 高：增加内存限制（解决 Node.js 问题）
-2. 中：安装网络诊断工具
-3. 低：优化 Shell 语法测试用例
+1. 🔴 高：加强安全隔离（根目录、/proc、进程数）
+2. 🟡 中：安装网络和 Shell 工具
+3. 🟢 低：修复 Python venv 和测试用例
