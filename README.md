@@ -6,10 +6,12 @@
 
 - 🔒 **文件系统隔离** - 通过命名空间隔离，独立的工作目录
 - 📦 **独立沙箱环境** - 每个会话拥有独立的 workspace
-- ⚡ **资源限制** - CPU、内存、文件大小、执行时间全面限制
+- ⚡ **资源限制** - CPU、内存、文件大小、执行时间全面限制（支持 Cgroup V2）
 - 🔄 **自动管理** - 沙箱自动创建、复用和销毁
 - 🤖 **LLM 集成** - 作为函数工具供 LLM 调用
 - 🚀 **完全复用宿主软件** - Python、Node.js、Git 等全部可用
+- 📤 **图片和文件发送** - 支持从沙箱发送图片和文件到会话
+- 💾 **持久化缓存** - uv 等工具的缓存持久化存储
 
 ## 技术方案
 
@@ -28,20 +30,33 @@ nsjail_args = [
     "/usr/local/bin/nsjail",
     "--user", "99999", "--group", "99999",
     "--disable_clone_newuser",      # 避免 newgidmap 错误
-    "--disable_clone_newnet",       # 避免网络接口权限错误
-    "--rlimit_as", "512",           # 内存限制 512MB
-    "--rlimit_fsize", "100",        # 文件大小限制 100MB
-    "--rlimit_cpu", "60",           # CPU 时间限制
-    "--time_limit", str(timeout),   # 执行超时
+    "--bindmount", f"{sandbox_dir}:/workspace:rw",
     "--bindmount", "/usr:/usr:ro",
     "--bindmount", "/lib:/lib:ro",
+    "--bindmount", "/lib64:/lib64:ro",
     "--bindmount", "/bin:/bin:ro",
-    "--bindmount", f"{sandbox_dir}:/workspace:rw",
+    "--bindmount", "/sbin:/sbin:ro",
+    "--bindmount", "/tmp:/tmp:rw",
+    "--bindmount", "/sandbox-cache:/sandbox-cache:rw",  # 持久化缓存
+    "--bindmount", "/dev/null:/dev/null:rw",
+    "--bindmount", "/dev/urandom:/dev/urandom:ro",
+    "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+    "--env", "UV_CACHE_DIR=/sandbox-cache/uv",
+    "--env", "HOME=/workspace",
+    "--time_limit", str(timeout),
+    "--rlimit_fsize", "100",
     "--cwd", "/workspace",
+    "--quiet",
     "--",
     "/bin/bash", "-c", command
 ]
 ```
+
+**关键配置说明：**
+- `/proc` 默认挂载（供 uv 等工具检测系统信息）
+- `/sandbox-cache` 持久化缓存目录（uv、yarn 等工具缓存）
+- `HOME=/workspace` 环境变量（工具配置文件存储）
+- 支持 Cgroup V2 资源限制（可选）
 
 ### 安全保障
 
@@ -67,6 +82,7 @@ services:
       - "6185:6185"
     volumes:
       - ./data:/AstrBot/data
+      - ./sandbox-cache:/sandbox-cache  # 持久化缓存目录
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
@@ -81,13 +97,29 @@ services:
 - `cap_add: [SYS_ADMIN]` - 必需，支持挂载命名空间
 - `cap_add: [NET_ADMIN]` - 必需，支持网络命名空间配置
 - `security_opt` - 必需，解除 AppArmor 和 Seccomp 限制
+- `./sandbox-cache:/sandbox-cache` - 持久化缓存目录（uv、yarn 等）
 - 不需要 `privileged: true`（已优化）
 
 ## 使用方法
 
 ### 1. LLM 函数调用
 
-插件会自动注册 `execute_shell` 函数工具，LLM 可以直接调用执行命令。
+插件注册了以下 LLM 工具：
+
+**execute_shell** - 执行 shell 命令
+```python
+execute_shell(command="python3 script.py", timeout=30)
+```
+
+**send_sandbox_image** - 发送沙箱内的图片
+```python
+send_sandbox_image(image_path="/workspace/chart.png")
+```
+
+**send_sandbox_file** - 发送沙箱内的文件
+```python
+send_sandbox_file(file_path="/workspace/report.txt")
+```
 
 ### 2. 命令调用
 
@@ -106,7 +138,9 @@ services:
 ```json
 {
   "max_timeout": 60,
-  "enable_network": false
+  "enable_network": false,
+  "memory_limit_mb": 512,
+  "cpu_limit_percent": 100
 }
 ```
 
@@ -114,6 +148,8 @@ services:
 |--------|------|--------|------|
 | max_timeout | int | 60 | 最大执行超时时间（秒） |
 | enable_network | bool | false | 是否允许沙箱访问网络 |
+| memory_limit_mb | int | -1 | 内存限制（MB），-1 表示不限制（需 Cgroup V2） |
+| cpu_limit_percent | int | -1 | CPU 限制（百分比），-1 表示不限制（需 Cgroup V2） |
 
 ## 资源限制
 
@@ -135,6 +171,21 @@ services:
 - uv, pdm, poetry（Python 包管理）
 - yarn（Node.js 包管理）
 - Playwright（浏览器自动化）
+
+## 持久化缓存
+
+沙箱支持持久化缓存目录 `/sandbox-cache`，用于存储工具缓存：
+
+```
+/sandbox-cache/
+├── uv/          # uv 缓存（UV_CACHE_DIR）
+└── (未来可添加 yarn, npm, pip 等)
+```
+
+**优势**：
+- 容器重启后缓存不丢失
+- 加速依赖安装
+- 统一管理，易于维护
 
 ## 会话管理
 
