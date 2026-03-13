@@ -121,7 +121,9 @@ class SandboxManager:
             nsjail_cmd.append("--disable_clone_newnet")
             nsjail_cmd.extend([
                 "--bindmount", "/etc/resolv.conf:/etc/resolv.conf:ro",
-                "--bindmount", "/etc/ssl:/etc/ssl:ro"
+                "--bindmount", "/etc/ssl:/etc/ssl:ro",
+                "--bindmount", "/etc/pki:/etc/pki:ro",
+                "--bindmount", "/etc/ca-certificates:/etc/ca-certificates:ro"
             ])
         
         if os.path.exists(astrbot_skills_dir):
