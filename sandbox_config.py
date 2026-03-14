@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict
+import os
 
 
 @dataclass
@@ -23,3 +24,8 @@ class SandboxConfig:
             self.custom_mounts = []
         if self.sandbox_symlinks is None:
             self.sandbox_symlinks = []
+    
+    @property
+    def skills_dir(self) -> str:
+        """OpenClaw 技能目录路径"""
+        return os.path.join(os.path.dirname(os.path.dirname(self.data_dir)), "skills")

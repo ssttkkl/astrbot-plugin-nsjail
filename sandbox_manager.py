@@ -189,8 +189,8 @@ class SandboxManager:
         if not sandbox_dir or not tmp_dir:
             return "沙箱创建或获取失败，请检查系统日志。", -1
         
-        # AstrBot 技能目录（data_dir 的上两级 + skills）
-        astrbot_skills_dir = os.path.join(os.path.dirname(os.path.dirname(self.config.data_dir)), "skills")
+        # AstrBot 技能目录
+        astrbot_skills_dir = self.config.skills_dir
         
         # 根据配置和用户权限决定 /data 目录挂载权限
         data_mount_mode = "ro"
