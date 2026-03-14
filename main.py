@@ -172,11 +172,11 @@ class NsjailPlugin(Star):
         real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, image_path)
         if not real_path:
             yield event.plain_result("错误: 沙箱未初始化")
-            return "错误: 沙箱未初始化"
+            return
         
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 图片文件不存在: {image_path}")
-            return f"错误: 图片文件不存在: {image_path}"
+            return
         
         yield event.image_result(real_path)
         return f"已发送图片: {image_path}"
