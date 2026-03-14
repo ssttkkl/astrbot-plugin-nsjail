@@ -122,6 +122,9 @@ class NsjailPlugin(Star):
         cpu_desc = f"{cpu_limit_percent}%" if cpu_limit_percent > 0 else "无限制"
         cpu_cores_desc = f"{cpu_cores_limit}核" if cpu_cores_limit > 0 else "无限制"
         
+        # 获取实际的 skills 目录路径
+        skills_dir_path = sandbox_config.skills_dir
+        
         tool_description = f"""在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱，文件系统隔离，资源受限。
 
 沙箱目录结构：
@@ -129,8 +132,8 @@ class NsjailPlugin(Star):
 - /data: 共享数据目录，用于跨会话持久化数据（当前权限：{data_perm_desc}）
   * 每个技能的持久化文件（数据、密钥、缓存等）应放在 /data/<技能名>/ 子目录下
   * 例如：/data/weather/cache.json, /data/github/token.txt
-- OpenClaw 技能目录：挂载到实际路径（通常是 /opt/astrbot/data/skills 或类似路径）（当前权限：{skills_perm_desc}）
-- ~/.agents/skills: 符号链接到 OpenClaw 技能目录，兼容 OpenClaw 技能调用
+- {skills_dir_path}: OpenClaw 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm_desc}）
+- ~/.agents/skills: 符号链接到 {skills_dir_path}，兼容 OpenClaw 技能调用
 - /usr, /bin, /lib: 系统工具和库（只读），包含 Python、Node.js、Git 等
 - /tmp: 临时文件目录（可读写）
 
