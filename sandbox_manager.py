@@ -31,8 +31,6 @@ class SandboxManager:
         tmp_dir = f"/tmp/nsjail_{clean_session_id}"
         os.makedirs(tmp_dir, exist_ok=True)
         
-        self._create_sandbox_symlinks(sandbox_dir)
-        
         try:
             os.chown(sandbox_dir, 99999, 99999)
             os.chmod(sandbox_dir, 0o755)
@@ -267,7 +265,7 @@ class SandboxManager:
             skills_mount_mode = "rw"
         
         if os.path.exists(astrbot_skills_dir):
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:{skills_mount_mode}"])
+            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/workspace/.agents/skills:{skills_mount_mode}"])
         
         # 添加自定义路径映射
         self._apply_custom_mounts(nsjail_cmd, is_admin)
