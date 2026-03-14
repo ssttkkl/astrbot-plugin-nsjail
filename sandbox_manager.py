@@ -250,7 +250,7 @@ class SandboxManager:
             skills_mount_mode = "rw"
         
         if os.path.exists(astrbot_skills_dir):
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:{skills_mount_mode}"])
+            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/skills:{skills_mount_mode}"])
         
         # 添加自定义路径映射
         self._apply_custom_mounts(nsjail_cmd, is_admin)
