@@ -149,6 +149,10 @@ class SandboxManager:
         elif self.config.data_write_permission == "admin" and is_admin:
             data_mount_mode = "rw"
         
+        # 确保 data 目录存在
+        data_dir = os.path.join(self.config.data_dir, "data")
+        os.makedirs(data_dir, exist_ok=True)
+        
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
@@ -163,7 +167,7 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
-            "--bindmount", f"{self.config.data_dir}/data:/data:{data_mount_mode}",
+            "--bindmount", f"{data_dir}:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
