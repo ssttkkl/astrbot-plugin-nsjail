@@ -248,24 +248,29 @@ class SandboxManager:
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout + 5)
             return stdout.decode('utf-8', errors='replace'), proc.returncode
         except asyncio.TimeoutError:
+            try:
+                proc.kill()
+                await proc.wait()
+            except Exception:
+                pass
             return "执行超时", -1
         except Exception as e:
             return f"执行错误: {str(e)}", -1
 
     def cleanup_old_sandboxes(self):
-        """清理超过3天的沙箱目录"""
+        """清理超过3天的沙箱目录和 /tmp 临时目录"""
         import time
         import glob
         
         current_time = time.time()
         three_days_ago = current_time - (3 * 24 * 3600)
         
-        pattern = os.path.join(self.workspaces_dir, '*_*')
-        
         cleaned_count = 0
+        
+        # 清理 workspace 目录
+        pattern = os.path.join(self.workspaces_dir, '*_*')
         for sandbox_path in glob.glob(pattern):
             try:
-                # 从目录名提取时间戳
                 basename = os.path.basename(sandbox_path)
                 timestamp_str = basename.split('_')[-1]
                 if timestamp_str.isdigit():
@@ -276,6 +281,20 @@ class SandboxManager:
                         cleaned_count += 1
             except Exception as e:
                 logger.warning(f"清理沙箱失败 {sandbox_path}: {e}")
+        
+        # 清理宿主机 /tmp 目录下的 nsjail 临时目录
+        for tmp_path in glob.glob('/tmp/nsjail_*_*'):
+            try:
+                basename = os.path.basename(tmp_path)
+                timestamp_str = basename.split('_')[-1]
+                if timestamp_str.isdigit():
+                    timestamp = int(timestamp_str)
+                    if timestamp < three_days_ago:
+                        shutil.rmtree(tmp_path)
+                        logger.info(f"清理过期临时目录: {tmp_path}")
+                        cleaned_count += 1
+            except Exception as e:
+                logger.warning(f"清理临时目录失败 {tmp_path}: {e}")
         
         if cleaned_count > 0:
             logger.info(f"清理了 {cleaned_count} 个过期沙箱")
