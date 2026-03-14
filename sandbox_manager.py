@@ -175,6 +175,13 @@ class SandboxManager:
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
         
+        # 添加独立的共享内存（64MB）
+        nsjail_cmd.extend(["--mount", "none:/dev/shm:tmpfs:size=67108864"])
+        
+        # 添加字体配置（用于图表渲染等）
+        if os.path.exists("/etc/fonts"):
+            nsjail_cmd.extend(["--bindmount", "/etc/fonts:/etc/fonts:ro"])
+        
         # 网络配置：默认隔离，配置启用时才共享宿主网络
         if self.config.enable_network:
             nsjail_cmd.append("--disable_clone_newnet")
