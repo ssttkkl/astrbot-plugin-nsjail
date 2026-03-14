@@ -57,11 +57,9 @@ class SandboxManager:
                     logger.error(f'符号链接目标路径必须在 /workspace/ 内: {target}')
                     continue
                 
-                # 将相对于沙箱根的路径转换为绝对路径
-                if not target.startswith('/'):
-                    target_path = os.path.join(sandbox_dir, target)
-                else:
-                    target_path = os.path.join(sandbox_dir, target.lstrip('/'))
+                # 去掉 /workspace 前缀，因为 sandbox_dir 已经会被挂载为 /workspace
+                target_relative = target.removeprefix('/workspace/')
+                target_path = os.path.join(sandbox_dir, target_relative)
                 
                 # 确保目标目录存在
                 target_dir = os.path.dirname(target_path)
