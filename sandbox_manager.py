@@ -3,67 +3,28 @@ import asyncio
 import os
 import tempfile
 import shutil
-import json
-import hashlib
 from astrbot.api import logger
+from .uid_mapper import UidMapper
+from .sandbox_config import SandboxConfig
 
 
 class SandboxManager:
     """沙箱管理器"""
-    def __init__(self, data_dir: str, max_timeout: int = 60, enable_network: bool = False, memory_limit_mb: int = -1, cpu_limit_percent: int = -1, data_write_permission: str = "none", skills_write_permission: str = "none"):
+    def __init__(self, config: SandboxConfig):
+        self.config = config
         self.sandboxes = {}
-        self.max_timeout = max_timeout
-        self.enable_network = enable_network
-        self.memory_limit_mb = memory_limit_mb
-        self.cpu_limit_percent = cpu_limit_percent
-        self.data_write_permission = data_write_permission
-        self.skills_write_permission = skills_write_permission
-        self.workspaces_dir = "/AstrBot/data/nsjail/workspaces"
+        self.workspaces_dir = os.path.join(config.data_dir, "workspaces")
         os.makedirs(self.workspaces_dir, exist_ok=True)
-        self.uid_map_file = os.path.join(data_dir, "nsjail_uid_map.json")
-        self.uid_map = self._load_uid_map()
+        uid_map_file = os.path.join(config.data_dir, "nsjail_uid_map.json")
+        self.uid_mapper = UidMapper(uid_map_file)
     
-    def _load_uid_map(self) -> dict:
-        if os.path.exists(self.uid_map_file):
-            try:
-                with open(self.uid_map_file) as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"加载 UID 映射失败: {e}")
-        return {}
-    
-    def _save_uid_map(self):
-        try:
-            os.makedirs(os.path.dirname(self.uid_map_file), exist_ok=True)
-            with open(self.uid_map_file, 'w') as f:
-                json.dump(self.uid_map, f)
-        except Exception as e:
-            logger.error(f"保存 UID 映射失败: {e}")
-    
-    def get_uid_for_session(self, session_id: str) -> int:
-        if session_id in self.uid_map:
-            return self.uid_map[session_id]
-        
-        hash_value = int(hashlib.sha256(session_id.encode()).hexdigest()[:8], 16)
-        candidate_uid = 10000 + (hash_value % 50000)
-        
-        used_uids = set(self.uid_map.values())
-        while candidate_uid in used_uids:
-            candidate_uid += 1
-            if candidate_uid >= 60000:
-                candidate_uid = 10000
-        
-        self.uid_map[session_id] = candidate_uid
-        self._save_uid_map()
-        logger.info(f"为会话 {session_id} 分配 UID: {candidate_uid}")
-        return candidate_uid
     
     def create_sandbox(self, session_id: str) -> tuple[str, int]:
         if session_id in self.sandboxes:
             info = self.sandboxes[session_id]
             return info['dir'], info['uid']
         
-        uid = self.get_uid_for_session(session_id)
+        uid = self.uid_mapper.get_uid_for_session(session_id)
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
         import time
         timestamp = int(time.time())
@@ -71,12 +32,7 @@ class SandboxManager:
         
         os.makedirs(sandbox_dir, exist_ok=True)
         
-        # 创建 .agents 目录和符号链接
-        agents_dir = os.path.join(sandbox_dir, ".agents")
-        os.makedirs(agents_dir, exist_ok=True)
-        skills_link = os.path.join(agents_dir, "skills")
-        if not os.path.exists(skills_link):
-            os.symlink("/skills", skills_link)
+        self._create_sandbox_symlinks(sandbox_dir)
         
         try:
             os.chown(sandbox_dir, 99999, 99999)
@@ -87,6 +43,66 @@ class SandboxManager:
         self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': timestamp}
         logger.info(f'创建沙箱: {sandbox_dir} (UID: {uid})')
         return sandbox_dir, uid
+    
+    def _create_sandbox_symlinks(self, sandbox_dir: str):
+        """创建沙箱内的符号链接"""
+        for symlink_config in self.config.sandbox_symlinks:
+            source = symlink_config.get('source')
+            target = symlink_config.get('target')
+            if source and target:
+                # 验证 target 必须在 /workspace 内（但不能是 /workspace 本身）
+                if not target.startswith('/workspace/'):
+                    logger.error(f'符号链接目标路径必须在 /workspace/ 内: {target}')
+                    continue
+                
+                # 将相对于沙箱根的路径转换为绝对路径
+                if not target.startswith('/'):
+                    target_path = os.path.join(sandbox_dir, target)
+                else:
+                    target_path = os.path.join(sandbox_dir, target.lstrip('/'))
+                
+                # 确保目标目录存在
+                target_dir = os.path.dirname(target_path)
+                os.makedirs(target_dir, exist_ok=True)
+                
+                # 创建符号链接
+                if not os.path.exists(target_path):
+                    try:
+                        os.symlink(source, target_path)
+                        logger.info(f'创建符号链接: {target_path} -> {source}')
+                    except Exception as e:
+                        logger.error(f'创建符号链接失败 {target_path} -> {source}: {e}')
+    
+    def _apply_custom_mounts(self, nsjail_cmd: list, is_admin: bool):
+        """应用自定义路径映射"""
+        for mount in self.config.custom_mounts:
+            if not isinstance(mount, dict):
+                continue
+            
+            host_path = mount.get("host_path", "").strip()
+            sandbox_path = mount.get("sandbox_path", "").strip()
+            write_permission = mount.get("write_permission", "none")
+            
+            if not host_path or not sandbox_path:
+                logger.warning(f"跳过无效的路径映射: {mount}")
+                continue
+            
+            # 展开 ~ 为实际路径
+            host_path = os.path.expanduser(host_path)
+            
+            if not os.path.exists(host_path):
+                logger.warning(f"宿主机路径不存在，跳过挂载: {host_path}")
+                continue
+            
+            # 根据权限配置决定挂载模式
+            mount_mode = "ro"
+            if write_permission == "all":
+                mount_mode = "rw"
+            elif write_permission == "admin" and is_admin:
+                mount_mode = "rw"
+            
+            nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
+            logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
     
     def get_sandbox(self, session_id: str) -> tuple[str, int]:
         info = self.sandboxes.get(session_id)
@@ -102,7 +118,7 @@ class SandboxManager:
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
-        timeout = min(timeout, self.max_timeout)
+        timeout = min(timeout, self.config.max_timeout)
         
         sandbox_dir, uid = self.get_sandbox(session_id)
         if not sandbox_dir:
@@ -112,9 +128,9 @@ class SandboxManager:
         
         # 根据配置和用户权限决定 /data 目录挂载权限
         data_mount_mode = "ro"
-        if self.data_write_permission == "all":
+        if self.config.data_write_permission == "all":
             data_mount_mode = "rw"
-        elif self.data_write_permission == "admin" and is_admin:
+        elif self.config.data_write_permission == "admin" and is_admin:
             data_mount_mode = "rw"
         
         nsjail_cmd = [
@@ -137,7 +153,7 @@ class SandboxManager:
         ]
         
         # 网络配置：默认隔离，配置启用时才共享宿主网络
-        if self.enable_network:
+        if self.config.enable_network:
             nsjail_cmd.append("--disable_clone_newnet")
             nsjail_cmd.extend([
                 "--bindmount", "/etc/resolv.conf:/etc/resolv.conf:ro",
@@ -151,40 +167,48 @@ class SandboxManager:
         
         # 根据配置和用户权限决定 /skills 目录挂载权限
         skills_mount_mode = "ro"
-        if self.skills_write_permission == "all":
+        if self.config.skills_write_permission == "all":
             skills_mount_mode = "rw"
-        elif self.skills_write_permission == "admin" and is_admin:
+        elif self.config.skills_write_permission == "admin" and is_admin:
             skills_mount_mode = "rw"
         
         if os.path.exists(astrbot_skills_dir):
             nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/skills:{skills_mount_mode}"])
         
+        # 添加自定义路径映射
+        self._apply_custom_mounts(nsjail_cmd, is_admin)
+        
         nsjail_cmd.extend([
             "--cwd", "/workspace",
             "--time_limit", str(timeout),
             "--rlimit_fsize", "100",
-            "--rlimit_nproc", "50",
         ])
         
+        # 进程数限制
+        if self.config.process_limit > 0:
+            nsjail_cmd.extend(["--rlimit_nproc", str(self.config.process_limit)])
+        
+        # CPU 核数限制
+        if self.config.cpu_cores_limit > 0:
+            nsjail_cmd.extend(["--max_cpus", str(self.config.cpu_cores_limit)])
+        
         # 使用 Cgroup V2 进行资源限制（如果配置了）
-        if self.memory_limit_mb > 0 or self.cpu_limit_percent > 0:
+        if self.config.memory_limit_mb > 0 or self.config.cpu_limit_percent > 0:
             nsjail_cmd.extend([
                 "--use_cgroupv2",
                 "--cgroupv2_mount", "/sys/fs/cgroup",
             ])
             
-            if self.memory_limit_mb > 0:
-                memory_bytes = self.memory_limit_mb * 1024 * 1024
+            if self.config.memory_limit_mb > 0:
+                memory_bytes = self.config.memory_limit_mb * 1024 * 1024
                 nsjail_cmd.extend(["--cgroup_mem_max", str(memory_bytes)])
             
-            if self.cpu_limit_percent > 0:
-                # CPU 限制：百分比转换为毫秒/秒
-                cpu_ms_per_sec = self.cpu_limit_percent * 10
+            if self.config.cpu_limit_percent > 0:
+                cpu_ms_per_sec = self.config.cpu_limit_percent * 10
                 nsjail_cmd.extend(["--cgroup_cpu_ms_per_sec", str(cpu_ms_per_sec)])
         
         nsjail_cmd.extend([
             "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
-            "--env", "UV_CACHE_DIR=/data/uv",
             "--env", "HOME=/workspace",
             "--env", "NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt",
             "--env", "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt",
