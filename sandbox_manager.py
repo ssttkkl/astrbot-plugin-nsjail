@@ -22,15 +22,13 @@ class SandboxManager:
             return self.sandboxes[session_id]
         
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
-        import time
-        timestamp = int(time.time())
-        sandbox_dir = os.path.join(self.workspaces_dir, f"{clean_session_id}_{timestamp}")
+        sandbox_dir = os.path.join(self.workspaces_dir, clean_session_id)
         
         # 创建工作目录
         os.makedirs(sandbox_dir, exist_ok=True)
         
         # 创建会话独立的 /tmp 目录（在宿主机 /tmp 下）
-        tmp_dir = f"/tmp/nsjail_{clean_session_id}_{timestamp}"
+        tmp_dir = f"/tmp/nsjail_{clean_session_id}"
         os.makedirs(tmp_dir, exist_ok=True)
         
         self._create_sandbox_symlinks(sandbox_dir)
@@ -43,7 +41,7 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        sandbox_info = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'created_at': timestamp}
+        sandbox_info = {'dir': sandbox_dir, 'tmp_dir': tmp_dir}
         self.sandboxes[session_id] = sandbox_info
         logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir}')
         return sandbox_info
@@ -135,6 +133,27 @@ class SandboxManager:
             if 'tmp_dir' in info and os.path.exists(info['tmp_dir']):
                 shutil.rmtree(info['tmp_dir'], ignore_errors=True)
                 logger.info(f"清理临时目录: {info['tmp_dir']}")
+    
+    def cleanup_all_sandboxes(self):
+        """启动时清理所有沙箱目录"""
+        import glob
+        
+        # 清理 workspace 目录
+        if os.path.exists(self.workspaces_dir):
+            for sandbox_path in glob.glob(os.path.join(self.workspaces_dir, '*')):
+                try:
+                    shutil.rmtree(sandbox_path, ignore_errors=True)
+                    logger.info(f"清理沙箱: {sandbox_path}")
+                except Exception as e:
+                    logger.warning(f"清理沙箱失败 {sandbox_path}: {e}")
+        
+        # 清理 /tmp 目录
+        for tmp_path in glob.glob('/tmp/nsjail_*'):
+            try:
+                shutil.rmtree(tmp_path, ignore_errors=True)
+                logger.info(f"清理临时目录: {tmp_path}")
+            except Exception as e:
+                logger.warning(f"清理临时目录失败 {tmp_path}: {e}")
     
     def resolve_sandbox_path(self, session_id: str, sandbox_path: str) -> str:
         """将沙箱内路径映射到宿主机真实路径"""
