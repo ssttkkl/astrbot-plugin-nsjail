@@ -146,7 +146,7 @@ class SandboxManager:
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
-            "--bindmount", "/tmp:/tmp:rw",
+            "--mount", "none:/tmp:tmpfs:size=268435456",  # 独立 tmpfs，限制 256MB
             "--bindmount", f"/AstrBot/data/nsjail/data:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
