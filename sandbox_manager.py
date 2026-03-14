@@ -139,7 +139,8 @@ class SandboxManager:
         info = self.sandboxes.get(session_id)
         tmp_dir = info.get('tmp_dir') if info else None
         
-        astrbot_skills_dir = "/AstrBot/data/skills"
+        # OpenClaw 技能目录（相对于 plugin_data 的上两级）
+        openclaw_skills_dir = os.path.join(os.path.dirname(os.path.dirname(self.plugin_data_dir)), "skills")
         
         # 根据配置和用户权限决定 /data 目录挂载权限
         data_mount_mode = "ro"
@@ -187,8 +188,8 @@ class SandboxManager:
         elif self.config.skills_write_permission == "admin" and is_admin:
             skills_mount_mode = "rw"
         
-        if os.path.exists(astrbot_skills_dir):
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/skills:{skills_mount_mode}"])
+        if os.path.exists(openclaw_skills_dir):
+            nsjail_cmd.extend(["--bindmount", f"{openclaw_skills_dir}:/skills:{skills_mount_mode}"])
         
         # 添加自定义路径映射
         self._apply_custom_mounts(nsjail_cmd, is_admin)
