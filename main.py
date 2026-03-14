@@ -132,8 +132,8 @@ class NsjailPlugin(Star):
 - /data: 共享数据目录，用于跨会话持久化数据（当前权限：{data_perm_desc}）
   * 每个技能的持久化文件（数据、密钥、缓存等）应放在 /data/<技能名>/ 子目录下
   * 例如：/data/weather/cache.json, /data/github/token.txt
-- {skills_dir_path}: OpenClaw 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm_desc}）
-- ~/.agents/skills: 符号链接到 {skills_dir_path}，兼容 OpenClaw 技能调用
+- {skills_dir_path}: 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm_desc}）
+- ~/.agents/skills: 符号链接到 {skills_dir_path}
 - /usr, /bin, /lib: 系统工具和库（只读），包含 Python、Node.js、Git 等
 - /tmp: 临时文件目录（可读写）
 
