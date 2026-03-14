@@ -166,13 +166,14 @@ class NsjailPlugin(Star):
         real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, image_path)
         if not real_path:
             yield event.plain_result("错误: 沙箱未初始化")
-            return
+            return "错误: 沙箱未初始化"
         
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 图片文件不存在: {image_path}")
-            return
+            return f"错误: 图片文件不存在: {image_path}"
         
         yield event.image_result(real_path)
+        return f"已发送图片: {image_path}"
     
     @filter.llm_tool(name="send_sandbox_file")
     async def send_sandbox_file(self, event: AstrMessageEvent, file_path: str):
@@ -187,14 +188,16 @@ class NsjailPlugin(Star):
         real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, file_path)
         if not real_path:
             yield event.plain_result("错误: 沙箱未初始化")
-            return
+            return "错误: 沙箱未初始化"
         
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 文件不存在: {file_path}")
-            return
+            return f"错误: 文件不存在: {file_path}"
         
         file_name = os.path.basename(real_path)
         yield event.chain_result([Comp.File(file=real_path, name=file_name)])
+        return f"已发送文件: {file_path}"
+        return f"已发送文件: {file_name}"
     
     @filter.command("nsjail")
     async def handle_nsjail_command(self, event: AstrMessageEvent):
