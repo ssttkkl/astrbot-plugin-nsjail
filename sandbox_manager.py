@@ -91,9 +91,14 @@ class SandboxManager:
             # 展开 ~ 为实际路径
             host_path = os.path.expanduser(host_path)
             
+            # 如果路径不存在，自动创建
             if not os.path.exists(host_path):
-                logger.warning(f"宿主机路径不存在，跳过挂载: {host_path}")
-                continue
+                try:
+                    os.makedirs(host_path, exist_ok=True)
+                    logger.info(f"自动创建挂载目录: {host_path}")
+                except Exception as e:
+                    logger.warning(f"无法创建目录 {host_path}，跳过挂载: {e}")
+                    continue
             
             # 根据权限配置决定挂载模式
             mount_mode = "ro"
