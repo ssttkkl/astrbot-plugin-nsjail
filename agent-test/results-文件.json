@@ -20,13 +20,13 @@
   {
     "name": "文件权限",
     "expected": "应该设置文件权限为 rw-r--r--",
-    "output": "退出码: 0\n输出:\n-rw-r--r-- 1 99999 99999 0 Mar 14 11:54 f\n\n---\n",
+    "output": "退出码: 0\n输出:\n-rw-r--r-- 1 99999 99999 0 Mar 14 14:12 f\n\n---\n",
     "category": "文件"
   },
   {
     "name": "查找文件",
     "expected": "应该找到 a.txt 文件",
-    "output": "退出码: 0\n输出:\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/wheel-0.46.3.dist-info/entry_points.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/wheel-0.46.3.dist-info/licenses/LICENSE.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/jaraco/text/Lorem ipsum.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/importlib_metadata-8.7.1.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/jaraco_context-6.1.0.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/jaraco_functools-4.4.0.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/zipp-3.23.0.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/jaraco.text-4.0.0.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD5_SV/setuptools/_vendor/autocommand-2.2.2.dist-info/top_level.txt\n./.cache/uv/archive-v0/M0evl41Y-LF0IXESD",
+    "output": "退出码: 0\n输出:\n./a.txt\n\n---\n",
     "category": "文件"
   },
   {

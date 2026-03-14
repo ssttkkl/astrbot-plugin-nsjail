@@ -122,19 +122,19 @@
   {
     "name": "进程信息",
     "expected": "应该显示进程列表",
-    "output": "退出码: 0\n输出:\nUSER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n99999          1  0.0  0.1   4064  2944 ?        SNs  11:53   0:00 /bin/bash -c ps aux | head -2\n\n---\n",
+    "output": "退出码: 0\n输出:\nUSER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n99999          1  0.0  0.1   4064  2944 ?        SNs  14:11   0:00 /bin/bash -c ps aux | head -2\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "内存信息",
     "expected": "应该显示内存使用情况或输出 ok",
-    "output": "退出码: 0\n输出:\n               total        used        free      shared  buff/cache   available\nMem:           1.6Gi       969Mi       141Mi        15Mi       748Mi       707Mi\nSwap:             0B          0B          0B\n\n---\n",
+    "output": "退出码: 0\n输出:\n               total        used        free      shared  buff/cache   available\nMem:           1.6Gi       980Mi       140Mi        15Mi       737Mi       696Mi\nSwap:             0B          0B          0B\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "磁盘使用",
     "expected": "应该显示磁盘使用情况",
-    "output": "退出码: 0\n输出:\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/vda3        40G   31G  6.4G  83% /workspace\n\n---\n",
+    "output": "退出码: 0\n输出:\nFilesystem      Size  Used Avail Use% Mounted on\n/dev/vda3        40G   23G   15G  62% /workspace\n\n---\n",
     "category": "Shell"
   },
   {
@@ -158,13 +158,13 @@
   {
     "name": "时间戳",
     "expected": "应该输出 Unix 时间戳（17 开头）",
-    "output": "退出码: 0\n输出:\n1773489221\n\n---\n",
+    "output": "退出码: 0\n输出:\n1773497522\n\n---\n",
     "category": "Shell"
   },
   {
     "name": "随机数",
     "expected": "应该输出随机数",
-    "output": "退出码: 0\n输出:\n22714\n\n---\n",
+    "output": "退出码: 0\n输出:\n17404\n\n---\n",
     "category": "Shell"
   },
   {
