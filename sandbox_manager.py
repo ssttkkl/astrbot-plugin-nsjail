@@ -71,6 +71,15 @@ class SandboxManager:
                     except Exception as e:
                         logger.error(f'创建符号链接失败 {target_path} -> {source}: {e}')
     
+    def _check_write_permission(self, path: str):
+        """检查目录是否有 UID 99999 的写入权限"""
+        try:
+            stat_info = os.stat(path)
+            if stat_info.st_uid != 99999 and not (stat_info.st_mode & 0o002):
+                logger.warning(f"目录 {path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {path}")
+        except Exception as e:
+            logger.warning(f"无法检查目录权限 {path}: {e}")
+    
     def _apply_custom_mounts(self, nsjail_cmd: list, is_admin: bool):
         """应用自定义路径映射"""
         for mount in self.config.custom_mounts:
@@ -109,13 +118,7 @@ class SandboxManager:
             
             # 如果是可写挂载，检查目录权限
             if mount_mode == "rw":
-                try:
-                    stat_info = os.stat(host_path)
-                    # 检查是否属于 UID 99999 或者 others 有写权限
-                    if stat_info.st_uid != 99999 and not (stat_info.st_mode & 0o002):
-                        logger.warning(f"目录 {host_path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {host_path}")
-                except Exception as e:
-                    logger.warning(f"无法检查目录权限 {host_path}: {e}")
+                self._check_write_permission(host_path)
             
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
@@ -222,6 +225,10 @@ class SandboxManager:
         data_dir = os.path.join(self.config.data_dir, "data")
         os.makedirs(data_dir, exist_ok=True)
         
+        # 如果是可写挂载，检查目录权限
+        if data_mount_mode == "rw":
+            self._check_write_permission(data_dir)
+        
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
@@ -269,6 +276,9 @@ class SandboxManager:
             skills_mount_mode = "rw"
         
         if os.path.exists(astrbot_skills_dir):
+            # 如果是可写挂载，检查目录权限
+            if skills_mount_mode == "rw":
+                self._check_write_permission(astrbot_skills_dir)
             nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:{skills_mount_mode}"])
         
         # 添加自定义路径映射
