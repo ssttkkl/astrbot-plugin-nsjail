@@ -131,6 +131,17 @@ class SandboxManager:
         sandbox_dir = info['dir']
         tmp_dir = info.get('tmp_dir')
         
+        # 检查自定义挂载路径
+        for mount in self.config.custom_mounts:
+            if not isinstance(mount, dict):
+                continue
+            sandbox_mount = mount.get("sandbox_path", "").strip()
+            host_path = mount.get("host_path", "").strip()
+            if sandbox_mount and host_path and sandbox_path.startswith(sandbox_mount):
+                rel_path = sandbox_path[len(sandbox_mount):].lstrip('/')
+                return os.path.join(os.path.expanduser(host_path), rel_path)
+        
+        # 标准路径映射
         if sandbox_path.startswith('/workspace/'):
             return os.path.join(sandbox_dir, sandbox_path[11:])
         elif sandbox_path.startswith('/workspace'):
