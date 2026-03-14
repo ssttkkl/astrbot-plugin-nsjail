@@ -50,13 +50,7 @@
   "custom_mounts": {
     "description": "自定义路径映射",
     "type": "template_list",
-    "default": [
-      {
-        "host_path": "/root/.cache",
-        "sandbox_path": "/workspace/.cache",
-        "write_permission": "admin"
-      }
-    ],
+    "default": [],
     "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射",
     "templates": {
       "mount": {
