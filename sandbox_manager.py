@@ -122,6 +122,26 @@ class SandboxManager:
                 shutil.rmtree(info['tmp_dir'], ignore_errors=True)
                 logger.info(f"清理临时目录: {info['tmp_dir']}")
     
+    def resolve_sandbox_path(self, session_id: str, sandbox_path: str) -> str:
+        """将沙箱内路径映射到宿主机真实路径"""
+        info = self.sandboxes.get(session_id)
+        if not info:
+            return None
+        
+        sandbox_dir = info['dir']
+        tmp_dir = info.get('tmp_dir')
+        
+        if sandbox_path.startswith('/workspace/'):
+            return os.path.join(sandbox_dir, sandbox_path[11:])
+        elif sandbox_path.startswith('/workspace'):
+            return os.path.join(sandbox_dir, sandbox_path[10:])
+        elif sandbox_path.startswith('/tmp/') and tmp_dir:
+            return os.path.join(tmp_dir, sandbox_path[5:])
+        elif sandbox_path.startswith('/tmp') and tmp_dir:
+            return os.path.join(tmp_dir, sandbox_path[4:])
+        else:
+            return os.path.join(sandbox_dir, sandbox_path.lstrip('/'))
+    
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
         timeout = min(timeout, self.config.max_timeout)

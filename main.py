@@ -160,32 +160,15 @@ class NsjailPlugin(Star):
         """
         session_id = event.session_id or "default"
         
-        # 获取沙箱真实目录
-        if session_id not in self.sandbox_mgr.sandboxes:
+        real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, image_path)
+        if not real_path:
             yield event.plain_result("错误: 沙箱未初始化")
             return
-        
-        info = self.sandbox_mgr.sandboxes[session_id]
-        sandbox_dir = info['dir']
-        tmp_dir = info.get('tmp_dir')
-        
-        # 转换路径
-        if image_path.startswith('/workspace/'):
-            real_path = os.path.join(sandbox_dir, image_path[11:])
-        elif image_path.startswith('/workspace'):
-            real_path = os.path.join(sandbox_dir, image_path[10:])
-        elif image_path.startswith('/tmp/') and tmp_dir:
-            real_path = os.path.join(tmp_dir, image_path[5:])
-        elif image_path.startswith('/tmp') and tmp_dir:
-            real_path = os.path.join(tmp_dir, image_path[4:])
-        else:
-            real_path = os.path.join(sandbox_dir, image_path.lstrip('/'))
         
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 图片文件不存在: {image_path}")
             return
         
-        # 发送图片
         yield event.image_result(real_path)
     
     @filter.llm_tool(name="send_sandbox_file")
@@ -198,32 +181,15 @@ class NsjailPlugin(Star):
         """
         session_id = event.session_id or "default"
         
-        # 获取沙箱真实目录
-        if session_id not in self.sandbox_mgr.sandboxes:
+        real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, file_path)
+        if not real_path:
             yield event.plain_result("错误: 沙箱未初始化")
             return
-        
-        info = self.sandbox_mgr.sandboxes[session_id]
-        sandbox_dir = info['dir']
-        tmp_dir = info.get('tmp_dir')
-        
-        # 转换路径
-        if file_path.startswith('/workspace/'):
-            real_path = os.path.join(sandbox_dir, file_path[11:])
-        elif file_path.startswith('/workspace'):
-            real_path = os.path.join(sandbox_dir, file_path[10:])
-        elif file_path.startswith('/tmp/') and tmp_dir:
-            real_path = os.path.join(tmp_dir, file_path[5:])
-        elif file_path.startswith('/tmp') and tmp_dir:
-            real_path = os.path.join(tmp_dir, file_path[4:])
-        else:
-            real_path = os.path.join(sandbox_dir, file_path.lstrip('/'))
         
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 文件不存在: {file_path}")
             return
         
-        # 发送文件
         file_name = os.path.basename(real_path)
         yield event.chain_result([Comp.File(file=real_path, name=file_name)])
     
