@@ -50,7 +50,13 @@
   "custom_mounts": {
     "description": "自定义路径映射",
     "type": "template_list",
-    "default": [],
+    "default": [
+      {
+        "host_path": "$(DATA)/.cache",
+        "sandbox_path": "/workspace/.cache",
+        "write_permission": "all"
+      }
+    ],
     "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射。支持变量：$(DATA) = 插件数据目录",
     "templates": {
       "mount": {
