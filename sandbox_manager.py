@@ -108,14 +108,13 @@ class SandboxManager:
             # 如果是可写挂载，检查 UID 99999 的写入权限
             if mount_mode == "rw":
                 try:
-                    stat_info = os.stat(host_path)
-                    # 尝试设置权限
-                    os.chown(host_path, 99999, 99999)
-                    os.chmod(host_path, 0o755)
-                except PermissionError:
-                    logger.warning(f"无法为 UID 99999 设置写入权限: {host_path}，请手动执行: sudo chown -R 99999:99999 {host_path}")
-                except Exception as e:
-                    logger.warning(f"设置权限失败 {host_path}: {e}")
+                    # 检查是否有写入权限
+                    test_file = os.path.join(host_path, '.nsjail_write_test')
+                    with open(test_file, 'w') as f:
+                        f.write('test')
+                    os.remove(test_file)
+                except (PermissionError, OSError):
+                    logger.warning(f"目录 {host_path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {host_path}")
             
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
