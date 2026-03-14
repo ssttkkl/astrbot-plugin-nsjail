@@ -156,7 +156,7 @@ class NsjailPlugin(Star):
         发送沙箱内的图片到当前会话。图片必须是通过 execute_shell 工具执行命令后产出到沙箱的。
         
         Args:
-            image_path(string): 沙箱内的图片路径（相对于 /workspace 或绝对路径）
+            image_path(string): 沙箱内的图片路径（相对于 /workspace 或 /tmp 或绝对路径）
         """
         session_id = event.session_id or "default"
         
@@ -165,13 +165,19 @@ class NsjailPlugin(Star):
             yield event.plain_result("错误: 沙箱未初始化")
             return
         
-        sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
+        info = self.sandbox_mgr.sandboxes[session_id]
+        sandbox_dir = info['dir']
+        tmp_dir = info.get('tmp_dir')
         
         # 转换路径
         if image_path.startswith('/workspace/'):
             real_path = os.path.join(sandbox_dir, image_path[11:])
         elif image_path.startswith('/workspace'):
             real_path = os.path.join(sandbox_dir, image_path[10:])
+        elif image_path.startswith('/tmp/') and tmp_dir:
+            real_path = os.path.join(tmp_dir, image_path[5:])
+        elif image_path.startswith('/tmp') and tmp_dir:
+            real_path = os.path.join(tmp_dir, image_path[4:])
         else:
             real_path = os.path.join(sandbox_dir, image_path.lstrip('/'))
         
@@ -188,7 +194,7 @@ class NsjailPlugin(Star):
         发送沙箱内的文件到当前会话。文件必须是通过 execute_shell 工具执行命令后产出到沙箱的。
         
         Args:
-            file_path(string): 沙箱内的文件路径（相对于 /workspace 或绝对路径）
+            file_path(string): 沙箱内的文件路径（相对于 /workspace 或 /tmp 或绝对路径）
         """
         session_id = event.session_id or "default"
         
@@ -197,13 +203,19 @@ class NsjailPlugin(Star):
             yield event.plain_result("错误: 沙箱未初始化")
             return
         
-        sandbox_dir = self.sandbox_mgr.sandboxes[session_id]['dir']
+        info = self.sandbox_mgr.sandboxes[session_id]
+        sandbox_dir = info['dir']
+        tmp_dir = info.get('tmp_dir')
         
         # 转换路径
         if file_path.startswith('/workspace/'):
             real_path = os.path.join(sandbox_dir, file_path[11:])
         elif file_path.startswith('/workspace'):
             real_path = os.path.join(sandbox_dir, file_path[10:])
+        elif file_path.startswith('/tmp/') and tmp_dir:
+            real_path = os.path.join(tmp_dir, file_path[5:])
+        elif file_path.startswith('/tmp') and tmp_dir:
+            real_path = os.path.join(tmp_dir, file_path[4:])
         else:
             real_path = os.path.join(sandbox_dir, file_path.lstrip('/'))
         
