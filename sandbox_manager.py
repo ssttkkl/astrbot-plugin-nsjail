@@ -105,16 +105,15 @@ class SandboxManager:
             elif write_permission == "admin" and is_admin:
                 mount_mode = "rw"
             
-            # 如果是可写挂载，检查 UID 99999 的写入权限
+            # 如果是可写挂载，检查目录权限
             if mount_mode == "rw":
                 try:
-                    # 检查是否有写入权限
-                    test_file = os.path.join(host_path, '.nsjail_write_test')
-                    with open(test_file, 'w') as f:
-                        f.write('test')
-                    os.remove(test_file)
-                except (PermissionError, OSError):
-                    logger.warning(f"目录 {host_path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {host_path}")
+                    stat_info = os.stat(host_path)
+                    # 检查是否属于 UID 99999 或者 others 有写权限
+                    if stat_info.st_uid != 99999 and not (stat_info.st_mode & 0o002):
+                        logger.warning(f"目录 {host_path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {host_path}")
+                except Exception as e:
+                    logger.warning(f"无法检查目录权限 {host_path}: {e}")
             
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
