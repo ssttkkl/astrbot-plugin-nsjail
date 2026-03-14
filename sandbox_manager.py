@@ -163,7 +163,7 @@ class SandboxManager:
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
-            "--bindmount", f"/AstrBot/data/nsjail/data:/data:{data_mount_mode}",
+            "--bindmount", f"{self.config.data_dir}/data:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
