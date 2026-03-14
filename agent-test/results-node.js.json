@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Node版本",
+    "expected": "应该输出 Node.js 版本号（v 开头）",
+    "output": "退出码: 0\n输出:\nv24.14.0\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node计算",
+    "expected": "应该计算 2 的 10 次方得到 1024",
+    "output": "退出码: 0\n输出:\n1024\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node数组",
+    "expected": "应该返回数组长度 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node对象",
+    "expected": "应该访问对象属性返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node字符串",
+    "expected": "应该转换为大写 HELLO",
+    "output": "退出码: 0\n输出:\nHELLO\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node JSON",
+    "expected": "应该序列化为 JSON 字符串",
+    "output": "退出码: 0\n输出:\n{\"a\":1}\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node map",
+    "expected": "应该映射数组元素乘以 2",
+    "output": "退出码: 0\n输出:\n[ 2, 4, 6 ]\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node filter",
+    "expected": "应该过滤出大于 2 的元素",
+    "output": "退出码: 0\n输出:\n[ 3, 4 ]\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node reduce",
+    "expected": "应该累加数组元素得到 6",
+    "output": "退出码: 0\n输出:\n6\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node箭头函数",
+    "expected": "应该调用箭头函数返回 10",
+    "output": "退出码: 0\n输出:\n10\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node模板字符串",
+    "expected": "应该输出 x=5",
+    "output": "退出码: 0\n输出:\nx=5\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node解构",
+    "expected": "应该解构对象返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node扩展运算符",
+    "expected": "应该合并数组",
+    "output": "退出码: 0\n输出:\n[ 1, 2, 3, 4 ]\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Promise",
+    "expected": "应该解析 Promise 返回 42",
+    "output": "退出码: 0\n输出:\n42\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node async",
+    "expected": "应该执行异步函数返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Set",
+    "expected": "应该创建 Set 并返回大小 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
+    "category": "Node.js"
+  },
+  {
+    "name": "Node Map",
+    "expected": "应该创建 Map 并获取值 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Node.js"
+  }
+]

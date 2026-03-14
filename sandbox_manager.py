@@ -17,10 +17,9 @@ class SandboxManager:
         self._create_locks = {}  # 每个 session 的创建锁
     
     
-    def create_sandbox(self, session_id: str) -> tuple[str, None]:
+    def create_sandbox(self, session_id: str) -> dict:
         if session_id in self.sandboxes:
-            info = self.sandboxes[session_id]
-            return info['dir'], None
+            return self.sandboxes[session_id]
         
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
         import time
@@ -44,9 +43,10 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'created_at': timestamp}
+        sandbox_info = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'created_at': timestamp}
+        self.sandboxes[session_id] = sandbox_info
         logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir}')
-        return sandbox_dir, None
+        return sandbox_info
     
     def _create_sandbox_symlinks(self, sandbox_dir: str):
         """创建沙箱内的符号链接"""
@@ -108,20 +108,18 @@ class SandboxManager:
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
     
-    def get_sandbox(self, session_id: str) -> tuple[str, None]:
-        info = self.sandboxes.get(session_id)
-        if info:
-            return info['dir'], None
-        return None, None
+    def get_sandbox(self, session_id: str) -> dict:
+        return self.sandboxes.get(session_id)
     
     def destroy_sandbox(self, session_id: str):
         info = self.sandboxes.pop(session_id, None)
+        self._create_locks.pop(session_id, None)  # 清理锁释放内存
         if info:
             if os.path.exists(info['dir']):
-                shutil.rmtree(info['dir'])
+                shutil.rmtree(info['dir'], ignore_errors=True)
                 logger.info(f"销毁沙箱: {info['dir']}")
             if 'tmp_dir' in info and os.path.exists(info['tmp_dir']):
-                shutil.rmtree(info['tmp_dir'])
+                shutil.rmtree(info['tmp_dir'], ignore_errors=True)
                 logger.info(f"清理临时目录: {info['tmp_dir']}")
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
@@ -134,13 +132,17 @@ class SandboxManager:
         
         # 使用锁保护沙箱创建
         async with self._create_locks[session_id]:
-            sandbox_dir, _ = self.get_sandbox(session_id)
-            if not sandbox_dir:
-                sandbox_dir, _ = self.create_sandbox(session_id)
+            info = self.get_sandbox(session_id)
+            if not info:
+                info = self.create_sandbox(session_id)
         
-        # 获取会话独立的 tmp 目录
-        info = self.sandboxes.get(session_id)
-        tmp_dir = info.get('tmp_dir') if info else None
+        # 安全地获取路径
+        sandbox_dir = info.get('dir')
+        tmp_dir = info.get('tmp_dir')
+        
+        # 兜底检查
+        if not sandbox_dir or not tmp_dir:
+            return "沙箱创建或获取失败，请检查系统日志。", -1
         
         # AstrBot 技能目录（data_dir 的上两级 + skills）
         astrbot_skills_dir = os.path.join(os.path.dirname(os.path.dirname(self.config.data_dir)), "skills")

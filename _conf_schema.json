@@ -23,16 +23,93 @@
     "default": -1,
     "hint": "沙箱 CPU 使用率限制，-1 表示不限制，1-100 表示限制的百分比。需要 Cgroup V2 支持"
   },
+  "cpu_cores_limit": {
+    "description": "CPU 核数限制",
+    "type": "int",
+    "default": -1,
+    "hint": "沙箱可使用的最大 CPU 核数，-1 表示不限制，正整数表示限制的核数。需要 Cgroup V2 支持"
+  },
+  "process_limit": {
+    "description": "进程数限制",
+    "type": "int",
+    "default": 50,
+    "hint": "沙箱可创建的最大进程数，-1 表示不限制，正整数表示限制的进程数"
+  },
   "data_write_permission": {
     "description": "/data 目录写入权限",
-    "type": "str",
+    "type": "string",
     "default": "none",
     "hint": "控制沙箱内 /data 目录的写入权限。选项：all（所有人可写）、admin（仅管理员可写）、none（只读）"
   },
   "skills_write_permission": {
     "description": "/skills 目录写入权限",
-    "type": "str",
+    "type": "string",
     "default": "none",
     "hint": "控制沙箱内 /skills 目录的写入权限。选项：all（所有人可写）、admin（仅管理员可写）、none（只读）"
+  },
+  "custom_mounts": {
+    "description": "自定义路径映射",
+    "type": "template_list",
+    "default": [
+      {
+        "host_path": "/root/.cache",
+        "sandbox_path": "/workspace/.cache",
+        "write_permission": "admin"
+      }
+    ],
+    "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射",
+    "templates": {
+      "mount": {
+        "name": "路径映射",
+        "hint": "配置一个宿主机路径到沙箱路径的映射",
+        "items": {
+          "host_path": {
+            "description": "宿主机路径",
+            "type": "string",
+            "hint": "宿主机上的绝对路径，例如：/root/.cache/uv"
+          },
+          "sandbox_path": {
+            "description": "沙箱内路径",
+            "type": "string",
+            "hint": "沙箱内的目标路径，例如：/workspace/.cache/uv"
+          },
+          "write_permission": {
+            "description": "写入权限",
+            "type": "string",
+            "default": "none",
+            "hint": "控制写入权限。选项：all（所有人可写）、admin（仅管理员可写）、none（只读）"
+          }
+        }
+      }
+    }
+  },
+  "sandbox_symlinks": {
+    "description": "沙箱内符号链接",
+    "type": "template_list",
+    "default": [
+      {
+        "source": "/skills",
+        "target": "/workspace/.agents/skills"
+      }
+    ],
+    "hint": "在沙箱内创建符号链接，将一个路径映射到另一个路径。注意：target 必须在 /workspace/ 目录内",
+    "templates": {
+      "symlink": {
+        "name": "符号链接",
+        "hint": "配置一个沙箱内的符号链接。target 路径必须以 /workspace/ 开头",
+        "items": {
+          "source": {
+            "description": "源路径",
+            "type": "string",
+            "hint": "符号链接指向的目标路径，例如：/data/gemini-web 或 /skills"
+          },
+          "target": {
+            "description": "链接路径",
+            "type": "string",
+            "hint": "符号链接的位置，必须在 /workspace/ 内，例如：/workspace/.gemini-web"
+          }
+        }
+      }
+    }
   }
 }
