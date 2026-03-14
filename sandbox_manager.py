@@ -139,7 +139,8 @@ class SandboxManager:
         info = self.sandboxes.get(session_id)
         tmp_dir = info.get('tmp_dir') if info else None
         
-        astrbot_skills_dir = "/AstrBot/data/skills"
+        # AstrBot 技能目录（相对于 plugin_data 的上两级）
+        astrbot_skills_dir = os.path.join(os.path.dirname(os.path.dirname(self.plugin_data_dir)), "skills")
         
         # 根据配置和用户权限决定 /data 目录挂载权限
         data_mount_mode = "ro"
