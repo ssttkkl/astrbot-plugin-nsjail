@@ -57,7 +57,7 @@
         "write_permission": "all"
       }
     ],
-    "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射。支持变量：$(DATA) = 插件数据目录",
+    "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射。支持变量：$(DATA) = 沙箱内 /data 目录对应的宿主机路径",
     "templates": {
       "mount": {
         "name": "路径映射",
@@ -66,7 +66,7 @@
           "host_path": {
             "description": "宿主机路径",
             "type": "string",
-            "hint": "宿主机上的绝对路径，例如：$(DATA)/.cache 或 /root/.cache/uv。支持变量：$(DATA) = 插件数据目录"
+            "hint": "宿主机上的绝对路径，例如：$(DATA)/.cache 或 /root/.cache/uv。支持变量：$(DATA) = 沙箱内 /data 目录对应的宿主机路径"
           },
           "sandbox_path": {
             "description": "沙箱内路径",

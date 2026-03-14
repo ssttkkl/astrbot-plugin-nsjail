@@ -86,8 +86,7 @@ class SandboxManager:
                 continue
             
             # 变量替换
-            host_path = host_path.replace("$(DATA)", self.config.data_dir)
-            sandbox_path = sandbox_path.replace("$(DATA)", self.config.data_dir)
+            host_path = host_path.replace("$(DATA)", os.path.join(self.config.data_dir, "data"))
             
             # 展开 ~ 为实际路径
             host_path = os.path.expanduser(host_path)
@@ -265,7 +264,7 @@ class SandboxManager:
             skills_mount_mode = "rw"
         
         if os.path.exists(astrbot_skills_dir):
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:/workspace/.agents/skills:{skills_mount_mode}"])
+            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:{skills_mount_mode}"])
         
         # 添加自定义路径映射
         self._apply_custom_mounts(nsjail_cmd, is_admin)
