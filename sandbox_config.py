@@ -17,6 +17,8 @@ class SandboxConfig:
     skills_write_permission: str = "none"
     custom_mounts: List[Dict] = None
     sandbox_symlinks: List[Dict] = None
+    extra_path: List[str] = None
+    custom_env: List[str] = None
     cgroup_available: bool = False
     
     def __post_init__(self):
@@ -24,6 +26,10 @@ class SandboxConfig:
             self.custom_mounts = []
         if self.sandbox_symlinks is None:
             self.sandbox_symlinks = []
+        if self.extra_path is None:
+            self.extra_path = []
+        if self.custom_env is None:
+            self.custom_env = []
     
     @property
     def skills_dir(self) -> str:

@@ -67,6 +67,10 @@ class NsjailPlugin(Star):
         skills_write_permission = config.get("skills_write_permission", "none")
         custom_mounts = config.get("custom_mounts", [])
         sandbox_symlinks = config.get("sandbox_symlinks", [])
+        extra_path = config.get("extra_path", [])
+        custom_env = config.get("custom_env", [])
+        extra_path = config.get("extra_path", [])
+        custom_env = config.get("custom_env", [])
         
         plugin_data_path = Path(get_astrbot_data_path()) / "plugin_data" / "astrbot_plugin_nsjail"
         plugin_data_path.mkdir(parents=True, exist_ok=True)
@@ -97,6 +101,8 @@ class NsjailPlugin(Star):
             skills_write_permission=skills_write_permission,
             custom_mounts=custom_mounts,
             sandbox_symlinks=sandbox_symlinks,
+            extra_path=extra_path,
+            custom_env=custom_env,
             cgroup_available=cgroup_available
         )
         

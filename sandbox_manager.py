@@ -284,11 +284,27 @@ class SandboxManager:
                 cpu_ms_per_sec = self.config.cpu_limit_percent * 10
                 nsjail_cmd.extend(["--cgroup_cpu_ms_per_sec", str(cpu_ms_per_sec)])
         
+        # 构建 PATH 环境变量
+        base_path = "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
+        if self.config.extra_path:
+            extra_path_str = ":".join(self.config.extra_path)
+            path_value = f"{extra_path_str}:{base_path}"
+        else:
+            path_value = base_path
+        
         nsjail_cmd.extend([
-            "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
+            "--env", f"PATH={path_value}",
             "--env", "HOME=/workspace",
             "--env", "NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt",
             "--env", "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt",
+        ])
+        
+        # 添加自定义环境变量
+        for env_var in self.config.custom_env:
+            if "=" in env_var:
+                nsjail_cmd.extend(["--env", env_var])
+        
+        nsjail_cmd.extend([
             "--quiet",
             "--",
             "/bin/bash", "-c", command
