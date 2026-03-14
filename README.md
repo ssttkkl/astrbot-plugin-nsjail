@@ -1,72 +1,82 @@
 # AstrBot NsJail 沙箱插件
 
-为 AstrBot 提供基于 NsJail 的安全代码执行环境，支持 LLM 函数调用。
+为 AstrBot 提供安全的代码执行环境，**专为 Skill 执行设计**。
 
-## 功能特性
+## 核心特性
 
-- 🔒 **文件系统隔离** - 通过命名空间隔离，独立的工作目录
-- 📦 **独立沙箱环境** - 每个会话拥有独立的 workspace
-- ⚡ **资源限制** - CPU、内存、文件大小、执行时间全面限制（支持 Cgroup V2）
-- 🔄 **自动管理** - 沙箱自动创建、复用和销毁
-- 🤖 **LLM 集成** - 作为函数工具供 LLM 调用
-- 🚀 **完全复用宿主软件** - Python、Node.js、Git 等全部可用
-- 📤 **图片和文件发送** - 支持从沙箱发送图片和文件到会话
-- 💾 **持久化缓存** - uv 等工具的缓存持久化存储
+### 🎯 专为 Skill 执行设计
 
-## 技术方案
+- **LLM 工具集成** - 作为函数工具供 AI 直接调用
+- **图片文件发送** - 支持从沙箱发送图片和文件到会话
+- **多步骤操作** - 同一会话内命令共享工作目录，支持复杂工作流
 
-### 隔离架构
+### 🔒 多会话隔离
 
-沙箱通过 bindmount 挂载宿主容器的系统目录，实现软件复用和隔离：
+- **独立沙箱** - 每个会话拥有独立的 `/workspace` 目录
+- **自动管理** - 会话结束后自动销毁，确保会话间完全隔离
+- **安全隔离** - 文件系统、进程、用户权限全面隔离
 
-- `/usr`, `/lib`, `/bin` 等系统目录只读挂载
-- `/workspace` 为独立的可读写工作目录
-- 每个会话有独立的 workspace，会话结束后销毁
+### 🚀 复用宿主软件
 
-### NsJail 配置
+- **零安装开销** - 直接使用宿主容器的 Python、Node.js、Git 等
+- **全局包可用** - pip/npm 全局安装的包沙箱内直接可用
+- **架构简洁** - 无需维护独立的 chroot 环境
 
+### ⚡ 资源限制
+
+- **内存限制** - 支持 Cgroup V2 物理内存限制
+- **CPU 限制** - CPU 使用率和核数限制
+- **进程限制** - 防止 fork 炸弹
+- **时间限制** - 执行超时自动终止
+
+### 💾 跨会话持久化数据
+
+- **共享数据目录** - `/data` 目录跨会话持久化
+- **技能目录** - `/skills` 目录可调用已安装的技能脚本
+- **权限控制** - 支持按用户角色控制写入权限
+
+## 快速开始
+
+### LLM 工具调用
+
+插件注册了 3 个 LLM 工具：
+
+**execute_shell** - 执行 shell 命令
 ```python
-nsjail_args = [
-    "/usr/local/bin/nsjail",
-    "--user", "99999", "--group", "99999",
-    "--disable_clone_newuser",      # 避免 newgidmap 错误
-    "--bindmount", f"{sandbox_dir}:/workspace:rw",
-    "--bindmount", "/usr:/usr:ro",
-    "--bindmount", "/lib:/lib:ro",
-    "--bindmount", "/lib64:/lib64:ro",
-    "--bindmount", "/bin:/bin:ro",
-    "--bindmount", "/sbin:/sbin:ro",
-    "--bindmount", "/tmp:/tmp:rw",
-    "--bindmount", "/sandbox-cache:/sandbox-cache:rw",  # 持久化缓存
-    "--bindmount", "/dev/null:/dev/null:rw",
-    "--bindmount", "/dev/urandom:/dev/urandom:ro",
-    "--env", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin",
-    "--env", "UV_CACHE_DIR=/sandbox-cache/uv",
-    "--env", "HOME=/workspace",
-    "--time_limit", str(timeout),
-    "--rlimit_fsize", "100",
-    "--cwd", "/workspace",
-    "--quiet",
-    "--",
-    "/bin/bash", "-c", command
-]
+execute_shell(command="python3 -c 'print(1+1)'", timeout=30)
 ```
 
-**关键配置说明：**
-- `/proc` 默认挂载（供 uv 等工具检测系统信息）
-- `/sandbox-cache` 持久化缓存目录（uv、yarn 等工具缓存）
-- `HOME=/workspace` 环境变量（工具配置文件存储）
-- 支持 Cgroup V2 资源限制（可选）
+**send_sandbox_image** - 发送沙箱内的图片
+```python
+send_sandbox_image(image_path="/workspace/chart.png")
+```
 
-### 安全保障
+**send_sandbox_file** - 发送沙箱内的文件
+```python
+send_sandbox_file(file_path="/workspace/report.txt")
+```
 
-| 隔离层级 | 实现方式 | 效果 |
-|---------|---------|------|
-| 文件系统 | Mount namespace + bindmount | 只能访问挂载的目录 |
-| 进程 | PID namespace | 无法看到其他进程 |
-| 网络 | 禁用网络命名空间 | 共享宿主网络（可配置） |
-| 资源 | rlimit | CPU/内存/文件大小限制 |
-| 用户权限 | UID 99999 | 非 root 运行 |
+### 命令调用
+
+```
+/nsjail python3 script.py
+/nsjail ls /workspace
+```
+
+## 配置参数
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| max_timeout | int | 60 | 最大执行超时（秒） |
+| enable_network | bool | false | 是否允许网络访问 |
+| memory_limit_mb | int | -1 | 内存限制（MB），-1 不限制 |
+| cpu_limit_percent | int | -1 | CPU 限制（%），-1 不限制 |
+| cpu_cores_limit | int | -1 | CPU 核数限制，-1 不限制 |
+| process_limit | int | 50 | 进程数限制 |
+| data_write_permission | string | "none" | /data 写权限（all/admin/none） |
+| skills_write_permission | string | "none" | /skills 写权限（all/admin/none） |
+| path | list | [默认PATH] | PATH 环境变量 |
+| custom_env | list | [] | 自定义环境变量（KEY=VALUE） |
 
 ## 部署方式
 
@@ -82,10 +92,10 @@ services:
       - "6185:6185"
     volumes:
       - ./data:/AstrBot/data
-      - ./sandbox-cache:/sandbox-cache  # 持久化缓存目录
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw  # Cgroup V2 支持
     cap_add:
-      - SYS_ADMIN
-      - NET_ADMIN
+      - SYS_ADMIN  # 必需：挂载命名空间
+      - NET_ADMIN  # 必需：网络命名空间
     security_opt:
       - apparmor=unconfined
       - seccomp=unconfined
@@ -93,204 +103,131 @@ services:
       - TZ=Asia/Shanghai
 ```
 
-**关键配置说明：**
-- `cap_add: [SYS_ADMIN]` - 必需，支持挂载命名空间
-- `cap_add: [NET_ADMIN]` - 必需，支持网络命名空间配置
-- `security_opt` - 必需，解除 AppArmor 和 Seccomp 限制
-- `./sandbox-cache:/sandbox-cache` - 持久化缓存目录（uv、yarn 等）
-- 不需要 `privileged: true`（已优化）
+**关键配置**：
+- `cap_add: [SYS_ADMIN, NET_ADMIN]` - 必需权限
+- `/sys/fs/cgroup` - Cgroup V2 资源限制支持
+- 不需要 `privileged: true`
 
-## 使用方法
+## 沙箱目录结构
 
-### 1. LLM 函数调用
+```
+沙箱内视图：
+/workspace/          # 当前会话工作目录（可读写）
+/data/               # 跨会话共享数据（权限可配置）
+/skills/             # 技能目录（权限可配置）
+/tmp/                # 临时文件（会话独立）
+/usr/, /bin/, /lib/  # 系统工具（只读，复用宿主）
+~/.agents/skills/    # 符号链接到 /skills
+```
 
-插件注册了以下 LLM 工具：
+**数据持久化**：
+- `/workspace` - 会话结束后销毁
+- `/data` - 永久保存，跨会话共享
+- `/tmp` - 会话独立，会话结束后销毁
 
-**execute_shell** - 执行 shell 命令
+## 技术实现
+
+### 隔离机制
+
+| 隔离层级 | 实现方式 | 效果 |
+|---------|---------|------|
+| 文件系统 | Mount namespace + bindmount | 只能访问挂载的目录 |
+| 进程 | PID namespace | 无法看到其他进程 |
+| 网络 | Network namespace | 默认断网，可选启用 |
+| 资源 | Cgroup V2 + rlimit | 内存/CPU/进程限制 |
+| 用户 | UID 99999 | 非 root 运行 |
+
+### 软件复用原理
+
+通过 bindmount 只读挂载宿主目录：
+```bash
+--bindmount /usr:/usr:ro
+--bindmount /bin:/bin:ro
+--bindmount /lib:/lib:ro
+```
+
+**优势**：
+- 无需维护独立的 chroot 环境
+- 宿主安装软件，沙箱立即可用
+- 节省磁盘空间（移除了 1.2GB 的 chroot）
+
+## 预装软件
+
+沙箱完全复用宿主容器的软件：
+- Python 3.12+
+- Node.js 24+
+- Git, curl, wget
+- 所有已安装的 Python 包和 npm 全局包
+
+**添加软件**：
+```bash
+docker exec astrbot pip install requests
+docker exec astrbot npm install -g typescript
+```
+
+## 常见问题
+
+### Q: 为什么需要 SYS_ADMIN 权限？
+
+A: nsjail 的挂载命名空间需要此权限。相比 privileged 模式更安全。
+
+### Q: 如何持久化数据？
+
+A: 使用 `/data` 目录。例如：
+```bash
+# 保存配置
+echo "key=value" > /data/myapp/config.txt
+
+# 下次会话读取
+cat /data/myapp/config.txt
+```
+
+### Q: 沙箱能访问网络吗？
+
+A: 默认断网。设置 `enable_network: true` 启用网络。
+
+### Q: 如何发送图片到会话？
+
+A: 使用 `send_sandbox_image` 工具：
 ```python
-execute_shell(command="python3 script.py", timeout=30)
+# 1. 生成图片
+execute_shell("python3 plot.py")  # 生成 chart.png
+
+# 2. 发送图片
+send_sandbox_image("/workspace/chart.png")
 ```
 
-**send_sandbox_image** - 发送沙箱内的图片
-```python
-send_sandbox_image(image_path="/workspace/chart.png")
-```
+## 测试结果
 
-**send_sandbox_file** - 发送沙箱内的文件
-```python
-send_sandbox_file(file_path="/workspace/report.txt")
-```
+**总体通过率：84.6% (121/143)**
 
-### 2. 命令调用
+| 类别 | 通过率 | 说明 |
+|------|--------|------|
+| 文件操作 | 100% (20/20) | ✅ 完全通过 |
+| 安全隔离 | 100% (5/5) | ✅ 完全通过 |
+| Node.js | 100% (17/17) | ✅ 完全通过 |
+| Python | 91% (31/34) | ⚠️ 部分虚拟环境问题 |
+| Shell | 75% (35/47) | ⚠️ 部分工具缺失 |
+| 网络 | 65% (13/20) | ⚠️ 默认断网 |
 
-在聊天中使用 `/nsjail` 命令：
-
-```
-/nsjail python3 -c "print('hello')"
-/nsjail ls /workspace
-/nsjail bash -c "echo test > file.txt && cat file.txt"
-```
-
-### 3. 配置
-
-配置文件位置：`data/config/astrbot_plugin_nsjail_config.json`
-
-```json
-{
-  "max_timeout": 60,
-  "enable_network": false,
-  "memory_limit_mb": 512,
-  "cpu_limit_percent": 100
-}
-```
-
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| max_timeout | int | 60 | 最大执行超时时间（秒） |
-| enable_network | bool | false | 是否允许沙箱访问网络 |
-| memory_limit_mb | int | -1 | 内存限制（MB），-1 表示不限制（需 Cgroup V2） |
-| cpu_limit_percent | int | -1 | CPU 限制（百分比），-1 表示不限制（需 Cgroup V2） |
-
-## 资源限制
-
-| 资源 | 默认限制 | 说明 |
-|------|---------|------|
-| 执行时间 | 30秒 | 可通过参数调整，最大 60 秒 |
-| 内存 | 512MB | 超出会被 OOM kill |
-| 文件大小 | 100MB | 单个文件最大 |
-| CPU | 60秒 | CPU 时间限制 |
+详见 `agent-test/TEST_FAILURES.md`
 
 ## 已知限制
 
 ### Playwright / Chromium 不兼容
 
-**问题**：Chromium 在 nsjail 沙箱中会触发 SIGTRAP 信号崩溃，无法正常运行。
-
-**原因**：
-- Chromium 的多进程架构与 nsjail 的 PID 命名空间隔离机制不兼容
-- 即使添加所有必要的挂载（/proc、/sys、/dev/pts、/etc/fonts）和参数（--disable-dev-shm-usage）仍然失败
-- 禁用 PID 隔离（--disable_clone_newpid）可能解决问题，但会破坏会话间的安全隔离
+Chromium 在 nsjail 中会触发 SIGTRAP 崩溃。
 
 **替代方案**：
-- 使用 requests + BeautifulSoup 进行网页抓取
-- 使用 Firefox（未测试，可能更兼容）
-- 在沙箱外运行 Playwright（牺牲安全性）
+- 使用 requests + BeautifulSoup
+- 使用 curl/wget + 解析工具
 
-## 预装软件
+## 相关链接
 
-沙箱完全复用宿主容器的软件，包括但不限于：
-- Python 3.13+
-- Node.js 24+
-- Git
-- Curl, wget
-- 所有已安装的 Python 包和 Node.js 模块
-- uv, pdm, poetry（Python 包管理）
-- yarn（Node.js 包管理）
-- Playwright（浏览器自动化）
-
-## 持久化缓存
-
-沙箱支持持久化缓存目录 `/sandbox-cache`，用于存储工具缓存：
-
-```
-/sandbox-cache/
-├── uv/          # uv 缓存（UV_CACHE_DIR）
-└── (未来可添加 yarn, npm, pip 等)
-```
-
-**优势**：
-- 容器重启后缓存不丢失
-- 加速依赖安装
-- 统一管理，易于维护
-
-## 会话管理
-
-- 每个会话自动创建独立的沙箱目录
-- 会话内多次命令共享同一沙箱（支持多步骤操作）
-- 会话结束后自动销毁沙箱目录
-- 每个会话分配唯一 UID（10000-60000）
-
-## 常见问题
-
-### Q: 为什么需要 CAP_SYS_ADMIN 权限？
-
-A: nsjail 的挂载命名空间功能需要此权限。相比 privileged 模式，这是更精细的权限控制。
-
-### Q: 沙箱能访问网络吗？
-
-A: 默认共享宿主网络。如需完全隔离，可启用网络命名空间（需要额外配置）。
-
-### Q: 如何添加更多软件包？
-
-A: 直接在宿主容器中安装即可，沙箱会自动复用。例如：
-```bash
-docker exec -it astrbot pip install requests
-docker exec -it astrbot npm install -g typescript
-```
-
-### Q: /workspace 目录会持久化吗？
-
-A: 不会。每个会话结束后，workspace 会被自动销毁，确保会话间隔离。
-
-### Q: 如何创建虚拟环境？
-
-A: 支持 venv 创建和使用：
-```bash
-/nsjail /usr/bin/python3 -m venv /workspace/myenv
-/nsjail /workspace/myenv/bin/pip install requests
-/nsjail /workspace/myenv/bin/python script.py
-```
-
-## 测试
-
-项目包含完整的测试套件（136个测试用例）：
-
-```bash
-cd agent-test
-python3 test-script.py test-cases-python.json <username> <password_md5>
-```
-
-测试分类：
-- Python (34个) - 基础功能、三方库、系统调用、多步骤
-- Shell (40个) - Shell 脚本、系统命令
-- Node.js (17个) - Node.js 功能
-- 文件 (20个) - 文件操作和权限
-- 网络 (20个) - HTTP 请求、DNS
-- 安全 (5个) - 隔离测试、资源限制
-
-### 测试结果（2026-03-14）
-
-**总体通过率：90% (123/136)**
-
-| 类别 | 通过率 | 说明 |
-|------|--------|------|
-| Python | 100% (34/34) | ✅ 完全通过 |
-| Shell | 97% (39/40) | ⚠️ whoami 失败（UID 99999 无用户名映射） |
-| Node.js | 100% (17/17) | ✅ 完全通过 |
-| 文件 | 75% (15/20) | ⚠️ 会话残留导致（非功能问题） |
-| 网络 | 85% (17/20) | ⚠️ Node.js 超时、DNS 解析失败 |
-| 安全 | 20% (1/5) | ✅ 隔离有效（"失败"即成功） |
-
-**已知问题**：
-- `whoami` 命令失败：UID 99999 没有 /etc/passwd 映射
-- Node.js HTTP 请求超时：功能正常但退出码 137
-- 部分 DNS 解析失败：网络配置相关
-
-**安全测试说明**：
-安全测试的"失败"实际上是预期的隔离效果：
-- 无法访问 /etc/passwd ✅
-- 无法修改系统文件 ✅
-- 无法访问 /dev/zero ✅
-- 无法访问宿主网络 ✅
-
-详见 `agent-test/AGENTS.md`
+- [GitHub Repository](https://github.com/ssttkkl/astrbot-plugin-nsjail)
+- [NsJail](https://github.com/google/nsjail)
+- [AstrBot](https://github.com/Soulter/AstrBot)
 
 ## 许可证
 
 MIT License
-
-## 相关链接
-
-- [NsJail](https://github.com/google/nsjail)
-- [AstrBot](https://github.com/Soulter/AstrBot)
-- [GitHub Repository](https://github.com/ssttkkl/astrbot-plugin-nsjail)
