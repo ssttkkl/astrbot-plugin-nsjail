@@ -160,6 +160,22 @@ send_sandbox_file(file_path="/workspace/report.txt")
 | 文件大小 | 100MB | 单个文件最大 |
 | CPU | 60秒 | CPU 时间限制 |
 
+## 已知限制
+
+### Playwright / Chromium 不兼容
+
+**问题**：Chromium 在 nsjail 沙箱中会触发 SIGTRAP 信号崩溃，无法正常运行。
+
+**原因**：
+- Chromium 的多进程架构与 nsjail 的 PID 命名空间隔离机制不兼容
+- 即使添加所有必要的挂载（/proc、/sys、/dev/pts、/etc/fonts）和参数（--disable-dev-shm-usage）仍然失败
+- 禁用 PID 隔离（--disable_clone_newpid）可能解决问题，但会破坏会话间的安全隔离
+
+**替代方案**：
+- 使用 requests + BeautifulSoup 进行网页抓取
+- 使用 Firefox（未测试，可能更兼容）
+- 在沙箱外运行 Playwright（牺牲安全性）
+
 ## 预装软件
 
 沙箱完全复用宿主容器的软件，包括但不限于：
