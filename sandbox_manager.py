@@ -285,12 +285,7 @@ class SandboxManager:
                 nsjail_cmd.extend(["--cgroup_cpu_ms_per_sec", str(cpu_ms_per_sec)])
         
         # 构建 PATH 环境变量
-        base_path = "/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
-        if self.config.extra_path:
-            extra_path_str = ":".join(self.config.extra_path)
-            path_value = f"{extra_path_str}:{base_path}"
-        else:
-            path_value = base_path
+        path_value = ":".join(self.config.path)
         
         nsjail_cmd.extend([
             "--env", f"PATH={path_value}",

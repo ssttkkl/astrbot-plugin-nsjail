@@ -17,7 +17,7 @@ class SandboxConfig:
     skills_write_permission: str = "none"
     custom_mounts: List[Dict] = None
     sandbox_symlinks: List[Dict] = None
-    extra_path: List[str] = None
+    path: List[str] = None
     custom_env: List[str] = None
     cgroup_available: bool = False
     
@@ -26,8 +26,8 @@ class SandboxConfig:
             self.custom_mounts = []
         if self.sandbox_symlinks is None:
             self.sandbox_symlinks = []
-        if self.extra_path is None:
-            self.extra_path = []
+        if self.path is None:
+            self.path = ["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"]
         if self.custom_env is None:
             self.custom_env = []
     
