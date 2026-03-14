@@ -91,6 +91,10 @@ class SandboxManager:
                 logger.warning(f"跳过无效的路径映射: {mount}")
                 continue
             
+            # 变量替换
+            host_path = host_path.replace("$(DATA)", self.config.data_dir)
+            sandbox_path = sandbox_path.replace("$(DATA)", self.config.data_dir)
+            
             # 展开 ~ 为实际路径
             host_path = os.path.expanduser(host_path)
             
