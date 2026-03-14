@@ -4,7 +4,6 @@ import os
 import tempfile
 import shutil
 from astrbot.api import logger
-from .uid_mapper import UidMapper
 from .sandbox_config import SandboxConfig
 
 
@@ -15,16 +14,14 @@ class SandboxManager:
         self.sandboxes = {}
         self.workspaces_dir = os.path.join(config.data_dir, "workspaces")
         os.makedirs(self.workspaces_dir, exist_ok=True)
-        uid_map_file = os.path.join(config.data_dir, "nsjail_uid_map.json")
-        self.uid_mapper = UidMapper(uid_map_file)
+        self._create_locks = {}  # 每个 session 的创建锁
     
     
-    def create_sandbox(self, session_id: str) -> tuple[str, int]:
+    def create_sandbox(self, session_id: str) -> tuple[str, None]:
         if session_id in self.sandboxes:
             info = self.sandboxes[session_id]
-            return info['dir'], info['uid']
+            return info['dir'], None
         
-        uid = self.uid_mapper.get_uid_for_session(session_id)
         clean_session_id = re.sub(r'[^a-zA-Z0-9_-]', '_', session_id)[:50]
         import time
         timestamp = int(time.time())
@@ -47,9 +44,9 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'uid': uid, 'created_at': timestamp}
-        logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir} (UID: {uid})')
-        return sandbox_dir, uid
+        self.sandboxes[session_id] = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'created_at': timestamp}
+        logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir}')
+        return sandbox_dir, None
     
     def _create_sandbox_symlinks(self, sandbox_dir: str):
         """创建沙箱内的符号链接"""
@@ -111,10 +108,10 @@ class SandboxManager:
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
     
-    def get_sandbox(self, session_id: str) -> tuple[str, int]:
+    def get_sandbox(self, session_id: str) -> tuple[str, None]:
         info = self.sandboxes.get(session_id)
         if info:
-            return info['dir'], info['uid']
+            return info['dir'], None
         return None, None
     
     def destroy_sandbox(self, session_id: str):
@@ -131,9 +128,15 @@ class SandboxManager:
         """在沙箱中执行命令"""
         timeout = min(timeout, self.config.max_timeout)
         
-        sandbox_dir, uid = self.get_sandbox(session_id)
-        if not sandbox_dir:
-            sandbox_dir, uid = self.create_sandbox(session_id)
+        # 获取或创建该会话的锁
+        if session_id not in self._create_locks:
+            self._create_locks[session_id] = asyncio.Lock()
+        
+        # 使用锁保护沙箱创建
+        async with self._create_locks[session_id]:
+            sandbox_dir, _ = self.get_sandbox(session_id)
+            if not sandbox_dir:
+                sandbox_dir, _ = self.create_sandbox(session_id)
         
         # 获取会话独立的 tmp 目录
         info = self.sandboxes.get(session_id)
