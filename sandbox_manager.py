@@ -191,7 +191,11 @@ class SandboxManager:
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
-        timeout = min(timeout, self.config.max_timeout)
+        # 如果 max_timeout 为 -1，表示无限制；否则取最小值
+        if self.config.max_timeout == -1:
+            timeout = timeout
+        else:
+            timeout = min(timeout, self.config.max_timeout)
         
         # 获取或创建该会话的锁
         if session_id not in self._create_locks:
@@ -286,7 +290,7 @@ class SandboxManager:
         
         nsjail_cmd.extend([
             "--cwd", "/workspace",
-            "--time_limit", str(timeout),
+            "--time_limit", str(timeout if timeout != -1 else 0),
             "--rlimit_fsize", "100",
         ])
         
@@ -342,7 +346,7 @@ class SandboxManager:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT
             )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout + 5)
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=None if timeout == -1 else timeout + 5)
             return stdout.decode('utf-8', errors='replace'), proc.returncode
         except asyncio.TimeoutError:
             try:
