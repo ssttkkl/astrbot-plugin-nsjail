@@ -76,7 +76,7 @@ class SandboxManager:
         try:
             stat_info = os.stat(path)
             if stat_info.st_uid != 99999 and not (stat_info.st_mode & 0o002):
-                logger.warning(f"目录 {path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: sudo chown -R 99999:99999 {path}")
+                logger.warning(f"目录 {path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请在容器内执行: chown -R 99999:99999 {path}")
         except Exception as e:
             logger.warning(f"无法检查目录权限 {path}: {e}")
     
