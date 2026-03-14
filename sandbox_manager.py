@@ -30,18 +30,25 @@ class SandboxManager:
         timestamp = int(time.time())
         sandbox_dir = os.path.join(self.workspaces_dir, f"{clean_session_id}_{timestamp}")
         
+        # 创建工作目录
         os.makedirs(sandbox_dir, exist_ok=True)
+        
+        # 创建会话独立的 /tmp 目录（在宿主机 /tmp 下）
+        tmp_dir = f"/tmp/nsjail_{clean_session_id}_{timestamp}"
+        os.makedirs(tmp_dir, exist_ok=True)
         
         self._create_sandbox_symlinks(sandbox_dir)
         
         try:
             os.chown(sandbox_dir, 99999, 99999)
             os.chmod(sandbox_dir, 0o755)
+            os.chown(tmp_dir, 99999, 99999)
+            os.chmod(tmp_dir, 0o755)
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
-        self.sandboxes[session_id] = {'dir': sandbox_dir, 'uid': uid, 'created_at': timestamp}
-        logger.info(f'创建沙箱: {sandbox_dir} (UID: {uid})')
+        self.sandboxes[session_id] = {'dir': sandbox_dir, 'tmp_dir': tmp_dir, 'uid': uid, 'created_at': timestamp}
+        logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir} (UID: {uid})')
         return sandbox_dir, uid
     
     def _create_sandbox_symlinks(self, sandbox_dir: str):
@@ -112,9 +119,13 @@ class SandboxManager:
     
     def destroy_sandbox(self, session_id: str):
         info = self.sandboxes.pop(session_id, None)
-        if info and os.path.exists(info['dir']):
-            shutil.rmtree(info['dir'])
-            logger.info(f"销毁沙箱: {info['dir']}")
+        if info:
+            if os.path.exists(info['dir']):
+                shutil.rmtree(info['dir'])
+                logger.info(f"销毁沙箱: {info['dir']}")
+            if 'tmp_dir' in info and os.path.exists(info['tmp_dir']):
+                shutil.rmtree(info['tmp_dir'])
+                logger.info(f"清理临时目录: {info['tmp_dir']}")
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
@@ -123,6 +134,10 @@ class SandboxManager:
         sandbox_dir, uid = self.get_sandbox(session_id)
         if not sandbox_dir:
             sandbox_dir, uid = self.create_sandbox(session_id)
+        
+        # 获取会话独立的 tmp 目录
+        info = self.sandboxes.get(session_id)
+        tmp_dir = info.get('tmp_dir') if info else None
         
         astrbot_skills_dir = "/AstrBot/data/skills"
         
@@ -146,7 +161,7 @@ class SandboxManager:
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
-            "--mount", "none:/tmp:tmpfs:size=268435456",  # 独立 tmpfs，限制 256MB
+            "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
             "--bindmount", f"/AstrBot/data/nsjail/data:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
