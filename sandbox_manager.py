@@ -292,6 +292,7 @@ class SandboxManager:
             "--cwd", "/workspace",
             "--time_limit", str(timeout if timeout != -1 else 0),
             "--rlimit_fsize", "100",
+            "--rlimit_nofile", "1024",
         ])
         
         # 进程数限制
