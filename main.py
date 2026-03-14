@@ -201,7 +201,6 @@ class NsjailPlugin(Star):
         
         file_name = os.path.basename(real_path)
         yield event.chain_result([Comp.File(file=real_path, name=file_name)])
-        return f"已发送文件: {file_name}"
     
     @filter.command("nsjail")
     async def handle_nsjail_command(self, event: AstrMessageEvent):
