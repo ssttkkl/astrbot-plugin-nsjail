@@ -249,6 +249,7 @@ class SandboxManager:
             "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
             "--bindmount", f"{data_dir}:/data:{data_mount_mode}",
             "--bindmount", "/dev/null:/dev/null:rw",
+            "--bindmount", "/dev/zero:/dev/zero:ro",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
         
