@@ -1,8 +1,0 @@
-[
-  {
-    "name": "检查NODE环境变量",
-    "command": "/nsjail env | grep NODE",
-    "expected": "应该显示 NODE_EXTRA_CA_CERTS",
-    "category": "测试"
-  }
-]
