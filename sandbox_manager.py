@@ -66,6 +66,7 @@ class SandboxManager:
                 target_dir = os.path.dirname(target_path)
                 os.makedirs(target_dir, exist_ok=True)
                 
+                # source 是沙箱内的路径，直接使用（符号链接在沙箱内创建）
                 # 创建符号链接
                 if not os.path.exists(target_path):
                     try:
@@ -73,6 +74,8 @@ class SandboxManager:
                         logger.info(f'创建符号链接: {target_path} -> {source}')
                     except Exception as e:
                         logger.error(f'创建符号链接失败 {target_path} -> {source}: {e}')
+                else:
+                    logger.warning(f'符号链接目标已存在，跳过: {target_path}')
     
     def _check_write_permission(self, path: str):
         """检查目录是否有 UID 99999 的写入权限"""
