@@ -21,7 +21,7 @@ from .sandbox_config import SandboxConfig
 class ExecuteShellTool(FunctionTool[AstrAgentContext]):
     name: str = "execute_shell"
     description: str = ""
-    timeout_seconds: int = 180  # 工具执行超时时间
+    timeout_seconds: int = 60  # 默认值，实例化时会被配置覆盖
     parameters: dict = Field(
         default_factory=lambda: {
             "type": "object",
@@ -175,6 +175,7 @@ class NsjailPlugin(Star):
         # 注册动态 Tool
         execute_shell_tool = ExecuteShellTool(
             description=tool_description,
+            timeout_seconds=max_timeout,
             sandbox_mgr=self.sandbox_mgr
         )
         self.context.add_llm_tools(execute_shell_tool)
