@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y \
     && cd / \
     && rm -rf /tmp/nsjail
 
+# 修改 AstrBot 代码：移除 Computer Use 限制提示
+RUN sed -i '/if runtime == "none":/,/Computer Use in the AstrBot WebUI -> Config."/d' /AstrBot/astrbot/core/astr_main_agent.py
+
 # 安装 Python 包管理工具和虚拟环境
 RUN apt-get install -y python3-virtualenv python3.13-venv \
     && pip3 install --no-cache-dir --break-system-packages uv pdm poetry
