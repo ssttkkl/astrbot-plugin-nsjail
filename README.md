@@ -79,6 +79,42 @@ send_sandbox_file(file_path="/workspace/report.txt")
 | skills_write_permission | string | "none" | /skills 写权限（all/admin/none） |
 | path | list | [默认PATH] | PATH 环境变量 |
 | custom_env | list | [] | 自定义环境变量（KEY=VALUE） |
+| custom_mounts | list | [] | 自定义路径挂载（见下方说明） |
+| sandbox_symlinks | list | [] | 沙箱内符号链接（见下方说明） |
+
+### 自定义路径挂载
+
+```json
+{
+  "custom_mounts": [
+    {
+      "host_path": "/path/on/host",
+      "sandbox_path": "/path/in/sandbox",
+      "write_permission": "all"
+    }
+  ]
+}
+```
+
+- `host_path`: 宿主机路径，支持 `~` 和 `$(DATA)` 变量
+- `sandbox_path`: 沙箱内路径
+- `write_permission`: 写权限（all/admin/none）
+
+### 沙箱内符号链接
+
+```json
+{
+  "sandbox_symlinks": [
+    {
+      "source": "/data/.config",
+      "target": "/workspace/.config"
+    }
+  ]
+}
+```
+
+- `source`: 符号链接源（沙箱内路径）
+- `target`: 符号链接目标（必须在 /workspace/ 内）
 
 ## 部署方式
 
@@ -119,7 +155,6 @@ services:
 /AstrBot/data/skills/    # 技能目录（权限可配置）
 /tmp/                    # 临时文件（会话独立）
 /usr/, /bin/, /lib/      # 系统工具（只读，复用宿主）
-~/.agents/skills/        # 符号链接到 /AstrBot/data/skills
 ```
 
 **数据持久化**：
