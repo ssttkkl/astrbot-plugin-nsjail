@@ -21,6 +21,7 @@ from .sandbox_config import SandboxConfig
 class ExecuteShellTool(FunctionTool[AstrAgentContext]):
     name: str = "execute_shell"
     description: str = ""
+    timeout_seconds: int = 180  # 工具执行超时时间
     parameters: dict = Field(
         default_factory=lambda: {
             "type": "object",
