@@ -1,0 +1,50 @@
+[
+  {
+    "name": "SQLite数据库操作",
+    "command": "/nsjail python3 << 'EOF'\nimport sqlite3\nconn = sqlite3.connect('/data/test.db')\ncursor = conn.cursor()\ncursor.execute('CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, value TEXT)')\ncursor.execute('INSERT INTO test (value) VALUES (\"hello\")')\nconn.commit()\ncursor.execute('SELECT * FROM test')\nprint(cursor.fetchall())\nconn.close()\nprint('SQLite测试成功')\nEOF",
+    "expected": "成功创建表、插入数据、查询，输出 SQLite测试成功",
+    "category": "安全与资源"
+  },
+  {
+    "name": "文件大小限制-100MB",
+    "command": "/nsjail dd if=/dev/zero of=/workspace/bigfile bs=1M count=150 2>&1",
+    "expected": "应该失败，提示 File size limit exceeded",
+    "category": "安全与资源"
+  },
+  {
+    "name": "超时控制-5秒",
+    "command": "/nsjail python3 -c 'import time; time.sleep(100); print(\"done\")'",
+    "expected": "应该在5秒左右超时终止，不输出 done",
+    "category": "安全与资源"
+  },
+  {
+    "name": "尝试访问/etc/passwd",
+    "command": "/nsjail cat /etc/passwd 2>&1",
+    "expected": "应该被阻止或返回空/错误",
+    "category": "安全与资源"
+  },
+  {
+    "name": "尝试修改系统文件",
+    "command": "/nsjail touch /usr/test.txt 2>&1",
+    "expected": "应该失败，提示权限不足或只读文件系统",
+    "category": "安全与资源"
+  },
+  {
+    "name": "尝试创建大文件",
+    "command": "/nsjail dd if=/dev/zero of=/workspace/bigfile bs=1M count=200 2>&1",
+    "expected": "应该因资源限制失败",
+    "category": "安全与资源"
+  },
+  {
+    "name": "尝试fork炸弹",
+    "command": "/nsjail bash -c 'for i in {1..100}; do sleep 1 & done; echo done' 2>&1",
+    "expected": "应该被限制或超时",
+    "category": "安全与资源"
+  },
+  {
+    "name": "尝试访问宿主机网络",
+    "command": "/nsjail curl http://169.254.169.254/latest/meta-data/ 2>&1",
+    "expected": "应该失败，无法访问元数据服务",
+    "category": "安全与资源"
+  }
+]
