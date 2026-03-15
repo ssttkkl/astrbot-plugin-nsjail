@@ -201,6 +201,8 @@ send_sandbox_image("/workspace/chart.png")
 
 ## 测试结果
 
+### 自动化测试
+
 **总体通过率：84.6% (121/143)**
 
 | 类别 | 通过率 | 说明 |
@@ -213,6 +215,22 @@ send_sandbox_image("/workspace/chart.png")
 | 网络 | 65% (13/20) | ⚠️ 默认断网 |
 
 详见 `agent-test/TEST_FAILURES.md`
+
+### LLM 集成场景验证
+
+针对 LLM Agent 实际使用场景的验证：
+
+| 场景 | 结果 | 说明 |
+|------|------|------|
+| Shell 命令执行 | ✅ | 基础命令、管道、重定向正常 |
+| Python 脚本 | ✅ | 标准库、第三方包可用 |
+| Node.js 执行 | ✅ | npm 全局包可用 |
+| 文件读写 | ✅ | /workspace 持久化正常 |
+| SQLite 数据库 | ✅ | 文件锁正常，无 database locked 错误 |
+| 网络访问 | ✅ | SSL 证书、DNS 配置正确 |
+| 状态保持 | ⚠️ | 环境变量和工作目录不保持（已文档化） |
+| 文件大小限制 | ✅ | rlimit_fsize 100MB 正确生效 |
+| 超时控制 | ✅ | time_limit 精准终止长时间任务 |
 
 ## 已知限制
 
