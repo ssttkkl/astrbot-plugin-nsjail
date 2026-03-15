@@ -48,7 +48,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         
         event = context.context.event
         session_id = event.session_id or "default"
-        is_admin = event.role == "admin"
+        is_admin = event.is_admin()
         
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
         return f"$ {command}\n{output}\n退出码: {code}"
@@ -162,7 +162,6 @@ class NsjailPlugin(Star):
   * 每个技能的持久化文件（数据、密钥、缓存等）应放在 /data/<技能名>/ 子目录下
   * 例如：/data/weather/cache.json, /data/github/token.txt
 - {skills_dir_path}: 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm_desc}）
-- ~/.agents/skills: 符号链接到 {skills_dir_path}
 - /usr, /bin, /lib: 系统工具和库（只读），包含 Python、Node.js、Git 等
 - /tmp: 临时文件目录（可读写）
 
@@ -244,7 +243,7 @@ class NsjailPlugin(Star):
             return
         
         session_id = event.session_id or "default"
-        is_admin = event.role == "admin"
+        is_admin = event.is_admin()
         output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, is_admin=is_admin)
         
         response = f"退出码: {returncode}\n输出:\n{output}"
