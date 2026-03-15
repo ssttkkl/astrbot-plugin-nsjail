@@ -1,0 +1,122 @@
+[
+  {
+    "name": "创建目录",
+    "expected": "应该创建目录并列出",
+    "output": "退出码: 1\n输出:\nmkdir: cannot create directory 'test': File exists\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "写入文件",
+    "expected": "应该写入并读取文件内容 data",
+    "output": "退出码: 0\n输出:\ndata\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "追加文件",
+    "expected": "应该追加内容，文件包含 a 和 b",
+    "output": "退出码: 0\n输出:\na\nb\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件权限",
+    "expected": "应该设置文件权限为 rw-r--r--",
+    "output": "退出码: 0\n输出:\n-rw-r--r-- 1 99999 99999 0 Mar 14 14:12 f\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "查找文件",
+    "expected": "应该找到 a.txt 文件",
+    "output": "退出码: 0\n输出:\n./a.txt\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件统计",
+    "expected": "应该统计行数为 3",
+    "output": "退出码: 0\n输出:\n3 f\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件复制",
+    "expected": "应该复制文件并读取内容 test",
+    "output": "退出码: 0\n输出:\ntest\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件移动",
+    "expected": "应该移动文件并读取内容 x",
+    "output": "退出码: 0\n输出:\nx\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件删除",
+    "expected": "应该删除文件，提示文件不存在",
+    "output": "退出码: 2\n输出:\nls: cannot access 'f': No such file or directory\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "目录树",
+    "expected": "应该创建多级目录并列出",
+    "output": "退出码: 0\n输出:\n.:\na\nworkspace\n\n./a:\nb\n\n./a/b:\nc\n\n./a/b/c:\n\n./workspace:\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件类型",
+    "expected": "应该识别文件类型为 ASCII",
+    "output": "退出码: 0\n输出:\nf: ASCII text\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件内容",
+    "expected": "应该读取前 2 行",
+    "output": "退出码: 0\n输出:\n1\n2\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件尾部",
+    "expected": "应该读取最后一行为 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件排序",
+    "expected": "应该排序输出 1, 2, 3",
+    "output": "退出码: 0\n输出:\n1\n2\n3\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件去重",
+    "expected": "应该去除重复行",
+    "output": "退出码: 0\n输出:\na\nb\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件压缩",
+    "expected": "应该压缩文件生成 f.gz",
+    "output": "退出码: 2\n输出:\ngzip: f.gz already exists;\tnot overwritten\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "tar打包",
+    "expected": "应该打包文件生成 a.tar.gz",
+    "output": "退出码: 0\n输出:\na.tar.gz\nf\nhttpx异步请求.py\nworkspace\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件对比",
+    "expected": "应该比较文件差异",
+    "output": "退出码: 1\n输出:\n1c1\n< a\n---\n> b\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "符号链接",
+    "expected": "应该创建符号链接并读取内容 test",
+    "output": "退出码: 1\n输出:\nln: failed to create symbolic link 'b': File exists\n\n---\n",
+    "category": "文件"
+  },
+  {
+    "name": "文件MD5",
+    "expected": "应该计算文件 MD5 哈希值",
+    "output": "退出码: 0\n输出:\nd8e8fca2dc0f896fd7cb4cb0031ba249  f\n\n---\n",
+    "category": "文件"
+  }
+]

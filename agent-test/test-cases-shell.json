@@ -1,0 +1,242 @@
+[
+  {
+    "name": "管道",
+    "command": "/nsjail echo hello | tr a-z A-Z",
+    "expected": "应该通过管道将小写转换为大写，输出 HELLO",
+    "category": "Shell"
+  },
+  {
+    "name": "重定向",
+    "command": "/nsjail echo err 2>&1",
+    "expected": "应该重定向错误输出，显示 err",
+    "category": "Shell"
+  },
+  {
+    "name": "变量",
+    "command": "/nsjail X=123 && echo $X",
+    "expected": "应该设置变量并输出 123",
+    "category": "Shell"
+  },
+  {
+    "name": "循环",
+    "command": "/nsjail for i in 1 2 3; do echo $i; done",
+    "expected": "应该循环输出 1, 2, 3",
+    "category": "Shell"
+  },
+  {
+    "name": "条件",
+    "command": "/nsjail if [ 1 -eq 1 ]; then echo yes; fi",
+    "expected": "应该判断条件为真并输出 yes",
+    "category": "Shell"
+  },
+  {
+    "name": "命令替换",
+    "command": "/nsjail echo $(expr 1 + 1)",
+    "expected": "应该执行命令替换并输出 2",
+    "category": "Shell"
+  },
+  {
+    "name": "字符串处理",
+    "command": "/nsjail echo 'hello world' | cut -d' ' -f1",
+    "expected": "应该提取第一个单词 hello",
+    "category": "Shell"
+  },
+  {
+    "name": "grep过滤",
+    "command": "/nsjail echo -e 'a\\nb\\nc' | grep b",
+    "expected": "应该过滤出包含 b 的行",
+    "category": "Shell"
+  },
+  {
+    "name": "sed替换",
+    "command": "/nsjail echo hello | sed 's/hello/hi/'",
+    "expected": "应该替换字符串输出 hi",
+    "category": "Shell"
+  },
+  {
+    "name": "awk处理",
+    "command": "/nsjail echo '1 2 3' | awk '{print $2}'",
+    "expected": "应该提取第二列输出 2",
+    "category": "Shell"
+  },
+  {
+    "name": "xargs",
+    "command": "/nsjail echo -e 'a\\nb' | xargs echo",
+    "expected": "应该将多行合并为一行输出 a b",
+    "category": "Shell"
+  },
+  {
+    "name": "tee命令",
+    "command": "/nsjail echo test | tee f.txt",
+    "expected": "应该同时输出到终端和文件",
+    "category": "Shell"
+  },
+  {
+    "name": "basename",
+    "command": "/nsjail basename /path/to/file.txt",
+    "expected": "应该提取文件名 file.txt",
+    "category": "Shell"
+  },
+  {
+    "name": "dirname",
+    "command": "/nsjail dirname /path/to/file",
+    "expected": "应该提取目录路径 /path/to",
+    "category": "Shell"
+  },
+  {
+    "name": "date命令",
+    "command": "/nsjail date +%Y",
+    "expected": "应该输出年份（202x）",
+    "category": "Shell"
+  },
+  {
+    "name": "sleep命令",
+    "command": "/nsjail sleep 1 && echo done",
+    "expected": "应该等待后输出 done",
+    "category": "Shell"
+  },
+  {
+    "name": "true命令",
+    "command": "/nsjail true && echo ok",
+    "expected": "应该执行成功并输出 ok",
+    "category": "Shell"
+  },
+  {
+    "name": "false命令",
+    "command": "/nsjail false || echo ok",
+    "expected": "应该执行失败但通过 || 输出 ok",
+    "category": "Shell"
+  },
+  {
+    "name": "test命令",
+    "command": "/nsjail test -d /workspace && echo yes",
+    "expected": "应该测试目录存在并输出 yes",
+    "category": "Shell"
+  },
+  {
+    "name": "which命令",
+    "command": "/nsjail which python3",
+    "expected": "应该找到 python3 的路径",
+    "category": "Shell"
+  },
+  {
+    "name": "进程信息",
+    "command": "/nsjail ps aux | head -2",
+    "expected": "应该显示进程列表",
+    "category": "Shell"
+  },
+  {
+    "name": "内存信息",
+    "command": "/nsjail free -h 2>&1 || echo ok",
+    "expected": "应该显示内存使用情况或输出 ok",
+    "category": "Shell"
+  },
+  {
+    "name": "磁盘使用",
+    "command": "/nsjail df -h . 2>&1",
+    "expected": "应该显示磁盘使用情况",
+    "category": "Shell"
+  },
+  {
+    "name": "环境变量列表",
+    "command": "/nsjail env | grep PATH",
+    "expected": "应该设置变量并输出 123",
+    "category": "Shell"
+  },
+  {
+    "name": "用户信息",
+    "command": "/nsjail whoami",
+    "expected": "应该显示当前用户名",
+    "category": "Shell"
+  },
+  {
+    "name": "主机名",
+    "command": "/nsjail hostname",
+    "expected": "应该显示主机名",
+    "category": "Shell"
+  },
+  {
+    "name": "时间戳",
+    "command": "/nsjail date +%s",
+    "expected": "应该输出 Unix 时间戳（17 开头）",
+    "category": "Shell"
+  },
+  {
+    "name": "随机数",
+    "command": "/nsjail echo $RANDOM",
+    "expected": "应该输出随机数",
+    "category": "Shell"
+  },
+  {
+    "name": "Shell后台任务",
+    "command": "/nsjail bash -c 'sleep 0.1 & wait; echo done'",
+    "expected": "应该等待后台任务完成输出 done",
+    "category": "Shell"
+  },
+  {
+    "name": "Shell信号处理",
+    "command": "/nsjail bash -c 'trap \"echo caught\" SIGTERM; kill -TERM \\$\\$ 2>/dev/null || echo caught'",
+    "expected": "应该捕获信号输出 caught",
+    "category": "Shell"
+  },
+  {
+    "name": "Shell case语句",
+    "command": "/nsjail bash -c 'x=2; case $x in 1) echo one;; 2) echo two;; esac'",
+    "expected": "应该匹配 case 分支输出 two",
+    "category": "Shell"
+  },
+  {
+    "name": "base64编码",
+    "command": "/nsjail echo hello | base64",
+    "expected": "应该编码为 aGVsbG8K",
+    "category": "Shell"
+  },
+  {
+    "name": "base64解码",
+    "command": "/nsjail echo aGVsbG8K | base64 -d",
+    "expected": "应该解码为 hello",
+    "category": "Shell"
+  },
+  {
+    "name": "URL编码",
+    "command": "/nsjail python3 -c 'import urllib.parse; print(urllib.parse.quote(\"a b\"))'",
+    "expected": "应该编码空格为 %20",
+    "category": "Shell"
+  },
+  {
+    "name": "十六进制",
+    "command": "/nsjail echo hello | xxd -p",
+    "expected": "应该转换为十六进制 68656c6c6f",
+    "category": "Shell"
+  },
+  {
+    "name": "数学计算-加法",
+    "command": "/nsjail expr 100 + 200",
+    "expected": "应该计算加法返回 300",
+    "category": "Shell"
+  },
+  {
+    "name": "数学计算-乘法",
+    "command": "/nsjail expr 25 \\* 4",
+    "expected": "应该计算乘法返回 100",
+    "category": "Shell"
+  },
+  {
+    "name": "字符统计",
+    "command": "/nsjail echo hello | wc -c",
+    "expected": "应该统计字符数为 6",
+    "category": "Shell"
+  },
+  {
+    "name": "单词统计",
+    "command": "/nsjail echo 'a b c' | wc -w",
+    "expected": "应该统计单词数为 3",
+    "category": "Shell"
+  },
+  {
+    "name": "行号",
+    "command": "/nsjail echo -e 'a\\nb' | nl",
+    "expected": "应该添加行号",
+    "category": "Shell"
+  }
+]

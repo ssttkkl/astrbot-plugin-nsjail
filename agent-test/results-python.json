@@ -1,0 +1,206 @@
+[
+  {
+    "name": "Python计算",
+    "expected": "应该输出 1024",
+    "output": "退出码: 0\n输出:\n1024\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "Python JSON",
+    "expected": "应该输出 JSON 格式的字符串，包含键 a 和值 1",
+    "output": "退出码: 0\n输出:\n{\"a\": 1}\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "Python列表",
+    "expected": "应该输出列表 [0, 2, 4, 6, 8]",
+    "output": "退出码: 0\n输出:\n[0, 2, 4, 6, 8]\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "requests库-GET",
+    "expected": "HTTP GET 请求应该返回状态码 200",
+    "output": "退出码: 0\n输出:\n200\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "requests库-POST",
+    "expected": "POST 请求应该返回 JSON 中的 key 字段值 value",
+    "output": "退出码: 0\n输出:\nvalue\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "BeautifulSoup解析",
+    "expected": "应该解析 HTML 并提取 p 标签的文本内容 test",
+    "output": "退出码: 0\n输出:\ntest\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "pandas创建DataFrame",
+    "expected": "应该创建 DataFrame 并返回长度 3",
+    "output": "退出码: 0\n输出:\n3\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "numpy数组操作",
+    "expected": "应该对数组求和得到 6",
+    "output": "退出码: 0\n输出:\n6\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "datetime处理",
+    "expected": "应该输出当前年份（202x）",
+    "output": "退出码: 0\n输出:\n2026\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "re正则匹配",
+    "expected": "应该匹配出所有数字 ['123', '456']",
+    "output": "退出码: 0\n输出:\n['123', '456']\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "pathlib路径",
+    "expected": "应该提取路径的最后一部分 workspace",
+    "output": "退出码: 0\n输出:\nworkspace\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "多行函数定义",
+    "expected": "55",
+    "output": "退出码: 0\n输出:\n55\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "类定义和使用",
+    "expected": "应该计算点到原点的距离为 5",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\n5\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "异常处理",
+    "expected": "应该捕获异常并输出 caught",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\ncaught\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "上下文管理器",
+    "expected": "应该成功写入并读取文件内容 hello",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nhello\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "httpx同步请求",
+    "expected": "HTTP 请求应该返回状态码 200",
+    "output": "退出码: 0\n输出:\n200\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "httpx异步请求",
+    "expected": "异步 HTTP 请求应该返回状态码 200",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\n200\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "pydantic模型验证",
+    "expected": "应该验证模型并返回 age 字段值 25",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\n25\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "pydantic类型错误",
+    "expected": "应该捕获验证错误并输出 error",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nerror\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "aiohttp客户端",
+    "expected": "异步 HTTP 请求应该返回状态码 200",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\n200\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "subprocess执行命令",
+    "expected": "应该执行 echo 命令并返回 test",
+    "output": "退出码: 0\n输出:\ntest\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "os文件操作",
+    "expected": "应该创建目录并返回 True",
+    "output": "退出码: 0\n输出:\nTrue\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "shutil文件复制",
+    "expected": "应该复制文件并读取内容 test",
+    "output": "退出码: 0\n输出:\ntest\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "glob文件匹配",
+    "expected": "应该匹配到 1 个 txt 文件",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "tempfile临时文件",
+    "expected": "应该创建临时文件并输出 ok",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nok\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "hashlib MD5",
+    "expected": "应该计算 MD5 哈希值 098f6bcd4621d373cade4e832627b4f6",
+    "output": "退出码: 0\n输出:\n098f6bcd4621d373cade4e832627b4f6\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "base64编解码",
+    "expected": "应该编码后解码得到原始字符串 test",
+    "output": "退出码: 0\n输出:\ntest\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "urllib解析URL",
+    "expected": "应该解析 URL 并提取域名 example.com",
+    "output": "退出码: 0\n输出:\nexample.com\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "sqlite3数据库",
+    "expected": "应该创建表、插入数据并查询返回 1",
+    "output": "退出码: 0\n输出:\n1\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "csv文件读写",
+    "expected": "应该写入 CSV 并读取第一列值 a",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\na\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "yaml解析",
+    "expected": "应该解析 YAML 并返回 key 的值 value",
+    "output": "退出码: 0\n输出:\nvalue\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "创建venv并安装包",
+    "expected": "应该创建虚拟环境、安装 requests 包并输出版本号",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nActivate.ps1\nactivate\nactivate.csh\nactivate.fish\npip\npip3\npip3.12\npython\npython3\npython3.12\n\n---\n退出码: 0\n输出:\nCollecting requests\n  Using cached requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)\nCollecting charset_normalizer<4,>=2 (from requests)\n  Using cached charset_normalizer-3.4.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (39 kB)\nCollecting idna<4,>=2.5 (from requests)\n  Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)\nCollecting urllib3<3,>=1.21.1 (from requests)\n  Using cached urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)\nCollecting certifi>=2017.4.17 (from requests)\n  Using cached certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)\nUsing cached requests-2.32.5-py3-none-any.whl (64 kB)\nDownloading certifi-2026.2.25-py3-none-any.whl (153 kB)\nDownloading charset_normalizer-3.4.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (196 kB)\nDownloading idna-3.11-py3-no",
+    "category": "Python"
+  },
+  {
+    "name": "venv中运行脚本",
+    "expected": "应该在虚拟环境中运行脚本并输出 hello from venv",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nhello from venv\n\n---\n",
+    "category": "Python"
+  },
+  {
+    "name": "多步骤文件操作",
+    "expected": "应该逐步写入文件，最终包含 step1 和step2",
+    "output": "退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nstep1\n\n---\n退出码: 0\n输出:\n\n---\n退出码: 0\n输出:\nstep1\nstep2\n\n---\n",
+    "category": "Python"
+  }
+]

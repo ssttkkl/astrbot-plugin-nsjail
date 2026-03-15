@@ -1,0 +1,20 @@
+[
+  {
+    "name": "SQLite数据库操作",
+    "command": "/nsjail python3 << 'EOF'\nimport sqlite3\nconn = sqlite3.connect('/data/test.db')\ncursor = conn.cursor()\ncursor.execute('CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, value TEXT)')\ncursor.execute('INSERT INTO test (value) VALUES (\"hello\")')\nconn.commit()\ncursor.execute('SELECT * FROM test')\nprint(cursor.fetchall())\nconn.close()\nprint('SQLite测试成功')\nEOF",
+    "expected": "成功创建表、插入数据、查询，输出 SQLite测试成功",
+    "category": "资源限制"
+  },
+  {
+    "name": "文件大小限制-100MB",
+    "command": "/nsjail dd if=/dev/zero of=/workspace/bigfile bs=1M count=150 2>&1",
+    "expected": "应该失败，提示 File size limit exceeded",
+    "category": "资源限制"
+  },
+  {
+    "name": "超时控制-5秒",
+    "command": "/nsjail python3 -c 'import time; time.sleep(100); print(\"done\")'",
+    "expected": "应该在5秒左右超时终止，不输出 done",
+    "category": "资源限制"
+  }
+]

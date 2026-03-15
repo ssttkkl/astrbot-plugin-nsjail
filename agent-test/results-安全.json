@@ -1,0 +1,32 @@
+[
+  {
+    "name": "尝试访问/etc/passwd",
+    "expected": "应该被阻止或返回空/错误",
+    "output": "退出码: 1\n输出:\ncat: /etc/passwd: No such file or directory\n\n---\n",
+    "category": "安全"
+  },
+  {
+    "name": "尝试修改系统文件",
+    "expected": "应该失败，提示权限不足或只读文件系统",
+    "output": "退出码: 1\n输出:\ntouch: cannot touch '/usr/test.txt': Permission denied\n\n---\n",
+    "category": "安全"
+  },
+  {
+    "name": "尝试创建大文件",
+    "expected": "应该因资源限制失败",
+    "output": "退出码: 1\n输出:\ndd: failed to open '/dev/zero': No such file or directory\n\n---\n",
+    "category": "安全"
+  },
+  {
+    "name": "尝试fork炸弹",
+    "expected": "应该被限制或超时",
+    "output": "退出码: 0\n输出:\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nb",
+    "category": "安全"
+  },
+  {
+    "name": "尝试访问宿主机网络",
+    "expected": "应该失败，无法访问元数据服务",
+    "output": "退出码: 137\n输出:\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0\r  0     0    0     0    0     0      0",
+    "category": "安全"
+  }
+]
