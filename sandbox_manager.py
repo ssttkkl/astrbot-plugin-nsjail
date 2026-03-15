@@ -49,9 +49,11 @@ class SandboxManager:
     
     def _create_sandbox_symlinks(self, sandbox_dir: str):
         """创建沙箱内的符号链接"""
+        logger.info(f'开始创建符号链接，配置项数量: {len(self.config.sandbox_symlinks)}')
         for symlink_config in self.config.sandbox_symlinks:
             source = symlink_config.get('source')
             target = symlink_config.get('target')
+            logger.info(f'处理符号链接配置: source={source}, target={target}')
             if source and target:
                 # 验证 target 必须在 /workspace 内（但不能是 /workspace 本身）
                 if not target.startswith('/workspace/'):
