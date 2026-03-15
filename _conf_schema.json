@@ -50,13 +50,7 @@
   "custom_mounts": {
     "description": "自定义路径映射",
     "type": "template_list",
-    "default": [
-      {
-        "host_path": "$(DATA)/.cache",
-        "sandbox_path": "/workspace/.cache",
-        "write_permission": "all"
-      }
-    ],
+    "default": [],
     "hint": "将宿主机路径映射到沙箱内的指定路径，支持多个映射。支持变量：$(DATA) = 沙箱内 /data 目录对应的宿主机路径",
     "templates": {
       "mount": {
@@ -88,8 +82,12 @@
     "type": "template_list",
     "default": [
       {
-        "source": "/skills",
-        "target": "/workspace/.agents/skills"
+        "source": "/data/.config",
+        "target": "/workspace/.config"
+      },
+      {
+        "source": "/data/.cache",
+        "target": "/workspace/.cache"
       }
     ],
     "hint": "在沙箱内创建符号链接，将一个路径映射到另一个路径。注意：target 必须在 /workspace/ 目录内",
@@ -101,7 +99,7 @@
           "source": {
             "description": "源路径",
             "type": "string",
-            "hint": "符号链接指向的目标路径，例如：/data/gemini-web 或 /skills"
+            "hint": "符号链接指向的目标路径，例如：/data/gemini-web"
           },
           "target": {
             "description": "链接路径",

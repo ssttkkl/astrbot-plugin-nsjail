@@ -1,7 +1,7 @@
 name: "nsjail"
 display_name: "NsJail 沙箱执行"
 author: "ssttkkl"
-desc: "为 AstrBot 提供安全的代码执行环境，专为 LLM Skill 执行设计。支持多会话隔离、资源限制、跨会话数据持久化。"
+desc: "为 AstrBot 提供安全的代码执行环境，专为 LLM Skill 执行设计。🎯 LLM 工具集成 | 🔒 多会话隔离 | 🚀 复用宿主软件 | ⚡ 资源限制 | 💾 跨会话持久化"
 version: "0.1.0"
 repo: "https://github.com/ssttkkl/astrbot-plugin-nsjail"
 astrbot_version: ">=4.16,<5"
