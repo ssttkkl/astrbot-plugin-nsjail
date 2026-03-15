@@ -39,6 +39,9 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f'设置目录权限失败: {e}')
         
+        # 创建符号链接
+        self._create_sandbox_symlinks(sandbox_dir)
+        
         sandbox_info = {'dir': sandbox_dir, 'tmp_dir': tmp_dir}
         self.sandboxes[session_id] = sandbox_info
         logger.info(f'创建沙箱: {sandbox_dir}, tmp: {tmp_dir}')
