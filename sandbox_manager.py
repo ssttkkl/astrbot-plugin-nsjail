@@ -174,6 +174,7 @@ class SandboxManager:
         
         sandbox_dir = info['dir']
         tmp_dir = info.get('tmp_dir')
+        data_dir = os.path.join(self.config.data_dir, "data")
         
         # 检查自定义挂载路径
         for mount in self.config.custom_mounts:
@@ -186,7 +187,11 @@ class SandboxManager:
                 return os.path.join(os.path.expanduser(host_path), rel_path)
         
         # 标准路径映射
-        if sandbox_path.startswith('/workspace/'):
+        if sandbox_path.startswith('/data/'):
+            return os.path.join(data_dir, sandbox_path[6:])
+        elif sandbox_path.startswith('/data'):
+            return os.path.join(data_dir, sandbox_path[5:])
+        elif sandbox_path.startswith('/workspace/'):
             return os.path.join(sandbox_dir, sandbox_path[11:])
         elif sandbox_path.startswith('/workspace'):
             return os.path.join(sandbox_dir, sandbox_path[10:])
