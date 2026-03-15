@@ -2,7 +2,7 @@
   {
     "name": "SQLite数据库操作",
     "expected": "成功创建表、插入数据、查询，输出 SQLite测试成功",
-    "output": "退出码: 0\n输出:\n[(1, 'hello'), (2, 'hello'), (3, 'hello'), (4, 'hello')]\nSQLite测试成功\n\n---\n",
+    "output": "退出码: 0\n输出:\n[(1, 'hello'), (2, 'hello'), (3, 'hello'), (4, 'hello'), (5, 'hello')]\nSQLite测试成功\n\n---\n",
     "category": "安全与资源"
   },
   {
@@ -38,13 +38,13 @@
   {
     "name": "尝试fork炸弹",
     "expected": "应该被限制或超时",
-    "output": "退出码: 0\n输出:\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\ndone\n\n---\n",
+    "output": "退出码: 0\n输出:\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nbash: fork: retry: Resource temporarily unavailable\nb",
     "category": "安全与资源"
   },
   {
-    "name": "尝试访问宿主机网络",
-    "expected": "应该失败，无法访问元数据服务",
-    "output": "退出码: 137\n输出:\n  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n                                 Dload  Upload   Total   Spent    Left  Speed\n\r  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0\r  0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0\r  0     0    0     0    0     0      0",
+    "name": "网络隔离测试",
+    "expected": "应该无法访问宿主机服务，网络隔离正常",
+    "output": "退出码: 0\n输出:\n<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\" />\n    <meta name=\"keywords\" content=\"AstrBot Soulter\" />\n    <meta name=\"description\" content=\"AstrBot Dashboard\" />\n    <meta name=\"robots\" content=\"noindex, nofollow\" />\n    <link\n      rel=\"stylesheet\"\n      href=\"https://fonts.googleapis.com/css2?family=Outfit&family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap\"\n    />\n    <!-- VAD (Voice Activity Detection) Libraries -->\n    <script src=\"https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.wasm.min.js\"></script>\n    <script src=\"https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.29/dist/bundle.min.js\"></script>\n    <title>AstrBot - 仪表盘</title>\n    <script type=\"module\" crossorigin src=\"/assets/index-b7f60880.js\"></script>\n    <link rel=\"stylesheet\" href=\"/asset",
     "category": "安全与资源"
   }
 ]

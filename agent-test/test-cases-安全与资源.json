@@ -42,9 +42,9 @@
     "category": "安全与资源"
   },
   {
-    "name": "尝试访问宿主机网络",
-    "command": "/nsjail curl http://169.254.169.254/latest/meta-data/ 2>&1",
-    "expected": "应该失败，无法访问元数据服务",
+    "name": "网络隔离测试",
+    "command": "/nsjail timeout 2 curl -s http://127.0.0.1:6185 2>&1 || echo 'Network isolated'",
+    "expected": "应该无法访问宿主机服务，网络隔离正常",
     "category": "安全与资源"
   }
 ]
