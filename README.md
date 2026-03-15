@@ -114,12 +114,12 @@ services:
 
 ```
 沙箱内视图：
-/workspace/          # 当前会话工作目录（可读写）
-/data/               # 跨会话共享数据（权限可配置）
-/skills/             # 技能目录（权限可配置）
-/tmp/                # 临时文件（会话独立）
-/usr/, /bin/, /lib/  # 系统工具（只读，复用宿主）
-~/.agents/skills/    # 符号链接到 /skills
+/workspace/              # 当前会话工作目录（可读写）
+/data/                   # 跨会话共享数据（权限可配置）
+/AstrBot/data/skills/    # 技能目录（权限可配置）
+/tmp/                    # 临时文件（会话独立）
+/usr/, /bin/, /lib/      # 系统工具（只读，复用宿主）
+~/.agents/skills/        # 符号链接到 /AstrBot/data/skills
 ```
 
 **数据持久化**：
