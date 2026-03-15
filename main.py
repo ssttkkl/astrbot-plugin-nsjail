@@ -134,13 +134,18 @@ class NsjailPlugin(Star):
         # 获取实际的 skills 目录路径
         skills_dir_path = sandbox_config.skills_dir
         
-        tool_description = f"""在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱，文件系统隔离，资源受限。
+        tool_description = f"""在隔离的沙箱环境中执行 shell 命令。
 
-⚠️ 重要限制：
-- 每次调用都是新进程，环境变量和工作目录不保持
-- 多步骤操作必须写成一行：cd /workspace/subdir && python script.py
-- 不能用 export 设置环境变量供下次调用使用
-- 文件会保持（/workspace 目录在会话内持久化）
+🚨 上下文限制（必读）：
+每次调用都是独立的新进程，不保留任何状态：
+- ❌ 环境变量不保留：export MY_VAR=value 在下次调用时丢失
+- ❌ 工作目录不保留：cd /some/dir 在下次调用时回到 /workspace
+- ✅ 文件会保留：写入 /workspace 的文件在会话内持久化
+
+正确的多步骤写法：
+- ✅ cd /workspace/subdir && python script.py
+- ✅ export VAR=value && echo $VAR
+- ❌ 第一次调用 cd /workspace/subdir，第二次调用 python script.py
 
 沙箱目录结构：
 - /workspace: 当前会话的工作目录（可读写），命令默认在此执行
