@@ -161,10 +161,39 @@ services:
 - Git, curl, wget
 - 所有已安装的 Python 包和 npm 全局包
 
-**添加软件**：
+### 添加软件
+
+**方式1：临时添加到 Docker 容器**
 ```bash
-docker exec astrbot pip install requests
+# 安装 Python 包
+docker exec astrbot pip install requests pandas
+
+# 安装 npm 全局包
 docker exec astrbot npm install -g typescript
+
+# 安装系统工具
+docker exec astrbot apt-get update && apt-get install -y imagemagick
+```
+⚠️ 注意：容器重启后会丢失，适合临时测试。
+
+**方式2：自行构建 Docker 镜像**
+```dockerfile
+FROM ghcr.io/ssttkkl/astrbot-plugin-nsjail:main
+
+# 安装额外的 Python 包
+RUN pip install requests pandas numpy
+
+# 安装额外的 npm 包
+RUN npm install -g typescript ts-node
+
+# 安装系统工具
+RUN apt-get update && apt-get install -y imagemagick ffmpeg
+```
+
+构建并使用：
+```bash
+docker build -t my-astrbot .
+# 在 docker-compose.yml 中使用 image: my-astrbot
 ```
 
 ## 常见问题
