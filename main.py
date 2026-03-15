@@ -67,6 +67,14 @@ class NsjailPlugin(Star):
         skills_write_permission = config.get("skills_write_permission", "none")
         custom_mounts = config.get("custom_mounts", [])
         sandbox_symlinks = config.get("sandbox_symlinks", [])
+        
+        # 过滤掉模板键
+        sandbox_symlinks = [
+            {k: v for k, v in item.items() if not k.startswith("__")}
+            for item in sandbox_symlinks
+            if isinstance(item, dict)
+        ]
+        
         path = config.get("path", None)
         custom_env = config.get("custom_env", [])
         extra_path = config.get("extra_path", [])
