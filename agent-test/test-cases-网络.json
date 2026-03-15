@@ -61,13 +61,13 @@
   },
   {
     "name": "Node.js HTTP请求",
-    "command": "/nsjail node -e 'require(\"http\").get(\"http://example.com\",r=>console.log(r.statusCode))'",
+    "command": "/nsjail node -e 'require(\"http\").get(\"http://example.com\",r=>{console.log(r.statusCode);process.exit(0)})'",
     "expected": "应该发送 HTTP 请求并返回状态码 200",
     "category": "网络"
   },
   {
     "name": "Node.js HTTPS请求",
-    "command": "/nsjail node -e 'require(\"https\").get(\"https://example.com\",r=>console.log(r.statusCode))'",
+    "command": "/nsjail node -e 'require(\"https\").get(\"https://example.com\",r=>{console.log(r.statusCode);process.exit(0)})'",
     "expected": "应该发送 HTTP 请求并返回状态码 200",
     "category": "网络"
   },
@@ -109,7 +109,7 @@
   },
   {
     "name": "下载速度测试",
-    "command": "/nsjail curl -s -w '%{speed_download}' -o /dev/null http://example.com",
+    "command": "/nsjail curl -s -w 'Speed: %{speed_download}' -o /dev/null http://example.com && echo ' bytes/s'",
     "expected": "应该显示下载速度",
     "category": "网络"
   },

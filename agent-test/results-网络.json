@@ -2,19 +2,19 @@
   {
     "name": "DNS解析-百度",
     "expected": "应该解析域名并返回 IP 地址",
-    "output": "退出码: 0\n输出:\nServer:\t\t127.0.0.11\nAddress:\t127.0.0.11#53\n\nNon-authoritative answer:\nName:\tbaidu.com\nAddress: 111.63.65.103\nName:\tbaidu.com\nAddress: 110.242.74.102\nName:\tbaidu.com\nAddress: 124.237.177.164\nName:\tbaidu.com\nAddress: 111.63.65.247\n\n\n---\n",
+    "output": "退出码: 0\n输出:\nServer:\t\t127.0.0.11\nAddress:\t127.0.0.11#53\n\nNon-authoritative answer:\nName:\tbaidu.com\nAddress: 111.63.65.103\nName:\tbaidu.com\nAddress: 110.242.74.102\nName:\tbaidu.com\nAddress: 111.63.65.247\nName:\tbaidu.com\nAddress: 124.237.177.164\n\n\n---\n",
     "category": "网络"
   },
   {
     "name": "DNS解析-Google",
     "expected": "应该解析域名并返回 IP 地址",
-    "output": "退出码: 0\n输出:\nServer:\t\t127.0.0.11\nAddress:\t127.0.0.11#53\n\nNon-authoritative answer:\nName:\tgoogle.com\nAddress: 142.251.45.142\nName:\tgoogle.com\nAddress: 2607:f8b0:400a:801::200e\n\n\n---\n",
+    "output": "退出码: 0\n输出:\nServer:\t\t127.0.0.11\nAddress:\t127.0.0.11#53\n\nNon-authoritative answer:\nName:\tgoogle.com\nAddress: 142.251.45.142\nName:\tgoogle.com\nAddress: 2607:f8b0:400a:803::200e\n\n\n---\n",
     "category": "网络"
   },
   {
     "name": "ping本地",
     "expected": "应该 ping 成功，显示发送和接收的包数",
-    "output": "退出码: 0\n输出:\nPING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.027 ms\n\n--- 127.0.0.1 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 0.027/0.027/0.027/0.000 ms\n\n---\n",
+    "output": "退出码: 0\n输出:\nPING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.023 ms\n\n--- 127.0.0.1 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 0.023/0.023/0.023/0.000 ms\n\n---\n",
     "category": "网络"
   },
   {
@@ -26,7 +26,7 @@
   {
     "name": "curl GitHub",
     "expected": "应该返回 HTTP 响应头",
-    "output": "退出码: 0\n输出:\nHTTP/2 200 \r\n\n---\n",
+    "output": "退出码: 0\n输出:\nHTTP/1.1 200 Connection established\r\n\n---\n",
     "category": "网络"
   },
   {
@@ -62,19 +62,19 @@
   {
     "name": "Node.js HTTP请求",
     "expected": "应该发送 HTTP 请求并返回状态码 200",
-    "output": "退出码: 137\n输出:\n200\n\n---\n",
+    "output": "退出码: 0\n输出:\n200\n\n---\n",
     "category": "网络"
   },
   {
     "name": "Node.js HTTPS请求",
     "expected": "应该发送 HTTP 请求并返回状态码 200",
-    "output": "退出码: 137\n输出:\n200\n\n---\n",
+    "output": "退出码: 0\n输出:\n200\n\n---\n",
     "category": "网络"
   },
   {
     "name": "检查网络接口",
     "expected": "应该显示网络接口信息",
-    "output": "退出码: 0\n输出:\n1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever\n    inet6 ::1/128 scope host proto kernel_lo \n       valid_lft forever preferred_lft forever\n448: eth0@if449: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default \n    link/ether 02:42:ac:13:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0\n    inet 172.19.0.3/16 brd 172.19.255.255 scope global eth0\n       valid_lft forever preferred_lft forever\n\n---\n",
+    "output": "退出码: 0\n输出:\n1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever\n    inet6 ::1/128 scope host proto kernel_lo \n       valid_lft forever preferred_lft forever\n482: eth0@if483: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default \n    link/ether 02:42:ac:13:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0\n    inet 172.19.0.3/16 brd 172.19.255.255 scope global eth0\n       valid_lft forever preferred_lft forever\n\n---\n",
     "category": "网络"
   },
   {
@@ -92,7 +92,7 @@
   {
     "name": "TCP连接测试",
     "expected": "应该尝试 TCP 连接",
-    "output": "退出码: 0\n输出:\nHTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sat, 14 Mar 2026 14:14:12 GMT\r\nContent-Type: text/html\r\nContent-Length: 155\r\nConnection: close\r\nCF-RAY: -\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>cloudflare</center>\r\n</body>\r\n</html>\r\n\n---\n",
+    "output": "退出码: 0\n输出:\nHTTP/1.1 400 Bad Request\r\nServer: cloudflare\r\nDate: Sun, 15 Mar 2026 08:38:55 GMT\r\nContent-Type: text/html\r\nContent-Length: 155\r\nConnection: close\r\nCF-RAY: -\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad Request</h1></center>\r\n<hr><center>cloudflare</center>\r\n</body>\r\n</html>\r\n\n---\n",
     "category": "网络"
   },
   {
@@ -110,7 +110,7 @@
   {
     "name": "下载速度测试",
     "expected": "应该显示下载速度",
-    "output": "退出码: 6\n输出:\n0\n---\n",
+    "output": "退出码: 0\n输出:\nSpeed: 3636 bytes/s\n\n---\n",
     "category": "网络"
   },
   {
