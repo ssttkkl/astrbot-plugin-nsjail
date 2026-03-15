@@ -136,6 +136,12 @@ class NsjailPlugin(Star):
         
         tool_description = f"""在隔离的沙箱环境中执行 shell 命令。每个会话有独立的沙箱，文件系统隔离，资源受限。
 
+⚠️ 重要限制：
+- 每次调用都是新进程，环境变量和工作目录不保持
+- 多步骤操作必须写成一行：cd /workspace/subdir && python script.py
+- 不能用 export 设置环境变量供下次调用使用
+- 文件会保持（/workspace 目录在会话内持久化）
+
 沙箱目录结构：
 - /workspace: 当前会话的工作目录（可读写），命令默认在此执行
 - /data: 共享数据目录，用于跨会话持久化数据（当前权限：{data_perm_desc}）
