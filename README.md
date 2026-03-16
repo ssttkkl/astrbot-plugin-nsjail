@@ -39,33 +39,26 @@
 
 ## 快速开始
 
-### LLM 工具调用
+### 前置要求
 
-插件注册了 3 个 LLM 工具：
+**本地部署需要安装 nsjail**：
+```bash
+# Ubuntu/Debian
+apt-get install nsjail
 
-**execute_shell** - 执行 shell 命令
-```python
-execute_shell(command="python3 -c 'print(1+1)'", timeout=30)
+# macOS
+brew install nsjail
 ```
 
-**send_sandbox_image** - 发送沙箱内的图片
-```python
-send_sandbox_image(image_path="/workspace/chart.png")
-```
+**推荐使用 Docker（已内置 nsjail）**：
+- 内置 nsjail 的 Astrbot 镜像：`ghcr.io/ssttkkl/astrbot-plugin-nsjail:main`
+- 使用 Docker Compose 部署（见下方"部署方式"章节）
 
-**send_sandbox_file** - 发送沙箱内的文件
-```python
-send_sandbox_file(file_path="/workspace/report.txt")
-```
+**关闭 Astrbot 的“使用电脑能力”功能**：
+- 仪表盘 → 配置文件 → 普通配置 → 使用电脑能力 → 运行环境：设置为 `none`
+- 如果还有其他代码执行器插件，需要关闭，否则LLM会看到多套工具造成混乱
 
-### 命令调用
-
-```
-/nsjail python3 script.py
-/nsjail ls /workspace
-```
-
-## 配置参数
+### 配置参数
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
@@ -82,7 +75,15 @@ send_sandbox_file(file_path="/workspace/report.txt")
 | custom_mounts | list | [] | 自定义路径挂载（见下方说明） |
 | sandbox_symlinks | list | [] | 沙箱内符号链接（见下方说明） |
 
-### 自定义路径挂载
+#### 权限配置
+
+**推荐配置为 `admin` 权限**：
+
+`data_write_permission` 和 `skills_write_permission` 设置为 `admin` 时，只有管理员能写入。
+
+管理员可以事先安装、配置好技能，用户通过只读权限执行技能和程序。
+
+#### 自定义路径挂载
 
 ```json
 {
@@ -100,7 +101,9 @@ send_sandbox_file(file_path="/workspace/report.txt")
 - `sandbox_path`: 沙箱内路径
 - `write_permission`: 写权限（all/admin/none）
 
-### 沙箱内符号链接
+#### 沙箱内符号链接
+
+每次新建 workspace 时，自动创建符号链接。通常用于将技能需要的文件链接到持久化目录下。
 
 ```json
 {
@@ -116,9 +119,7 @@ send_sandbox_file(file_path="/workspace/report.txt")
 - `source`: 符号链接源（沙箱内路径）
 - `target`: 符号链接目标（必须在 /workspace/ 内）
 
-## 部署方式
-
-### Docker Compose（推荐）
+### Docker Compose 部署方式（推荐）
 
 ```yaml
 services:
@@ -144,7 +145,6 @@ services:
 **关键配置**：
 - `cap_add: [SYS_ADMIN, NET_ADMIN]` - 必需权限
 - `/sys/fs/cgroup` - Cgroup V2 资源限制支持
-- 不需要 `privileged: true`
 
 ## 沙箱目录结构
 
@@ -161,32 +161,6 @@ services:
 - `/workspace` - 会话结束后销毁
 - `/data` - 永久保存，跨会话共享
 - `/tmp` - 会话独立，会话结束后销毁
-
-## 技术实现
-
-### 隔离机制
-
-| 隔离层级 | 实现方式 | 效果 |
-|---------|---------|------|
-| 文件系统 | Mount namespace + bindmount | 只能访问挂载的目录 |
-| 进程 | PID namespace | 无法看到其他进程 |
-| 网络 | Network namespace | 默认断网，可选启用 |
-| 资源 | Cgroup V2 + rlimit | 内存/CPU/进程限制 |
-| 用户 | UID 99999 | 非 root 运行 |
-
-### 软件复用原理
-
-通过 bindmount 只读挂载宿主目录：
-```bash
---bindmount /usr:/usr:ro
---bindmount /bin:/bin:ro
---bindmount /lib:/lib:ro
-```
-
-**优势**：
-- 无需维护独立的 chroot 环境
-- 宿主安装软件，沙箱立即可用
-- 节省磁盘空间（移除了 1.2GB 的 chroot）
 
 ## 预装软件
 
@@ -233,10 +207,6 @@ docker build -t my-astrbot .
 
 ## 常见问题
 
-### Q: 为什么需要 SYS_ADMIN 权限？
-
-A: nsjail 的挂载命名空间需要此权限。相比 privileged 模式更安全。
-
 ### Q: 如何持久化数据？
 
 A: 使用 `/data` 目录。例如：
@@ -248,20 +218,45 @@ echo "key=value" > /data/myapp/config.txt
 cat /data/myapp/config.txt
 ```
 
+可以使用自定义符号链接功能，将程序使用的配置、缓存等持久化数据目录配置到 `/data` 路径下，或者使用自定义挂载功能挂载到宿主的指定目录下。
+
 ### Q: 沙箱能访问网络吗？
 
 A: 默认断网。设置 `enable_network: true` 启用网络。
 
-### Q: 如何发送图片到会话？
+### Q: 如何发送图片/文件到会话？
 
-A: 使用 `send_sandbox_image` 工具：
-```python
-# 1. 生成图片
-execute_shell("python3 plot.py")  # 生成 chart.png
+A: 可以告诉 LLM 使用 `send_sandbox_image` / `send_sandbox_file` 工具。
 
-# 2. 发送图片
-send_sandbox_image("/workspace/chart.png")
+### Q: 为什么提示需要启用 Computer Use 功能？
+
+A: Astrbot 当未开启“使用电脑能力”功能时，会在系统提示词中注入这一段提示词。可以告诉 LLM 使用 `execute_shell` 工具执行命令。
+
+## 技术实现
+
+### 隔离机制
+
+| 隔离层级 | 实现方式 | 效果 |
+|---------|---------|------|
+| 文件系统 | Mount namespace + bindmount | 只能访问挂载的目录 |
+| 进程 | PID namespace | 无法看到其他进程 |
+| 网络 | Network namespace | 默认断网，可选启用 |
+| 资源 | Cgroup V2 + rlimit | 内存/CPU/进程限制 |
+| 用户 | UID 99999 | 非 root 运行 |
+
+### 软件复用原理
+
+通过 bindmount 只读挂载宿主目录：
+```bash
+--bindmount /usr:/usr:ro
+--bindmount /bin:/bin:ro
+--bindmount /lib:/lib:ro
 ```
+
+**优势**：
+- 无需维护独立的 chroot 环境
+- 宿主安装软件，沙箱立即可用
+- 节省磁盘空间（移除了 1.2GB 的 chroot）
 
 ## 测试结果
 
