@@ -29,7 +29,17 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 第3层：安装 Python 工具和 Playwright
+# 第3层：配置中文 locale
+RUN apt-get update && apt-get install -y locales \
+    && sed -i 's/^# *zh_CN.UTF-8/zh_CN.UTF-8/' /etc/locale.gen \
+    && locale-gen zh_CN.UTF-8 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=zh_CN.UTF-8 \
+    LC_ALL=zh_CN.UTF-8
+
+# 第4层：安装 Python 工具和 Playwright
 RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv \
     && pip3 install --no-cache-dir --break-system-packages uv pdm poetry \
     && pip3 install --no-cache-dir --break-system-packages playwright \
@@ -37,5 +47,5 @@ RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 第4层：安装 Node.js 工具
+# 第5层：安装 Node.js 工具
 RUN npm install -g yarn
