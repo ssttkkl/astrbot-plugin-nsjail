@@ -40,7 +40,6 @@ RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv \
 # 第4层：安装 Node.js 工具
 RUN npm install -g yarn
 
-# 第5层：创建目录和配置
-RUN mkdir -p /AstrBot/data \
-    && echo 'root:100000:65536' >> /etc/subuid \
+# 第5层：配置用户命名空间
+RUN echo 'root:100000:65536' >> /etc/subuid \
     && echo 'root:100000:65536' >> /etc/subgid
