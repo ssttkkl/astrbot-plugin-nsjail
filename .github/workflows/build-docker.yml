@@ -30,4 +30,3 @@ jobs:
           context: ./pkg
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/astrbot-with-nsjail:latest
-          no-cache: true

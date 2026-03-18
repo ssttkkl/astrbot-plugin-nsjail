@@ -1,6 +1,17 @@
 FROM soulter/astrbot:latest
 
-# 安装 nsjail 依赖和构建工具
+# 第1层：安装 JRE 和字体（经常变动的依赖）
+RUN apt-get update && apt-get install -y \
+    openjdk-21-jre-headless \
+    fonts-wqy-microhei \
+    fonts-wqy-zenhei \
+    fonts-noto-cjk \
+    fontconfig \
+    && fc-cache -fv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 第2层：安装 nsjail（编译耗时，很少变动）
 RUN apt-get update && apt-get install -y \
     autoconf bison flex gcc g++ git \
     libprotobuf-dev libnl-route-3-dev \
@@ -14,24 +25,29 @@ RUN apt-get update && apt-get install -y \
     && make \
     && mv nsjail /usr/local/bin/ \
     && cd / \
-    && rm -rf /tmp/nsjail
+    && rm -rf /tmp/nsjail \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 修改 AstrBot 代码：移除 Computer Use 限制提示
+# 第3层：修改 AstrBot 代码
 RUN sed -i '/if runtime == "none":/,/Computer Use in the AstrBot WebUI -> Config."/d' /AstrBot/astrbot/core/astr_main_agent.py
 
-# 安装 Python 包管理工具和虚拟环境
-RUN apt-get install -y python3-virtualenv python3.13-venv \
-    && pip3 install --no-cache-dir --break-system-packages uv pdm poetry
+# 第4层：安装 Python 工具
+RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv \
+    && pip3 install --no-cache-dir --break-system-packages uv pdm poetry \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 安装 Playwright 及其依赖
+# 第5层：安装 Playwright
 RUN pip3 install --no-cache-dir --break-system-packages playwright \
     && playwright install --with-deps chromium
 
-# 安装 Node.js 包管理工具（npm 通常随 Node.js 自带）
+# 第6层：安装 Node.js 工具
 RUN npm install -g yarn
 
-# 创建 AstrBot 目录结构（用于挂载 skills 目录）
+# 第7层：创建目录
 RUN mkdir -p /AstrBot/data
 
-# 清理
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# 第8层：配置用户命名空间
+RUN echo 'root:100000:65536' >> /etc/subuid \
+    && echo 'root:100000:65536' >> /etc/subgid
