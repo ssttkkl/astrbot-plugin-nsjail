@@ -1,5 +1,4 @@
 import asyncio
-import re
 import os
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
@@ -44,7 +43,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         command = kwargs.get("command", "")
         if len(command) > 65535:
             return "命令过长（最大 65535 字符）"
-        timeout = kwargs.get("timeout", 30)
+        timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
         
         event = context.context.event
         session_id = event.session_id or "default"
