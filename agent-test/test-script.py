@@ -12,7 +12,6 @@ AstrBot 插件测试脚本
 import asyncio
 import json
 import sys
-import hashlib
 import aiohttp
 
 API_BASE = "http://127.0.0.1:6185/api"

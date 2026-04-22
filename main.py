@@ -1,11 +1,9 @@
 import asyncio
 import re
 import os
-from pathlib import Path
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger, AstrBotConfig
-from astrbot.core.message.message_event_result import MessageChain
 import astrbot.api.message_components as Comp
 from astrbot.core.agent.tool import FunctionTool, ToolExecResult
 from astrbot.core.agent.run_context import ContextWrapper
@@ -80,8 +78,6 @@ class NsjailPlugin(Star):
         
         path = config.get("path", None)
         custom_env = config.get("custom_env", [])
-        extra_path = config.get("extra_path", [])
-        
         plugin_data_path = StarTools.get_data_dir()
         plugin_data_path.mkdir(parents=True, exist_ok=True)
         
@@ -192,9 +188,9 @@ class NsjailPlugin(Star):
         
         real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, image_path)
         if not real_path:
-            yield event.plain_result("错误: 沙箱未初始化")
+            yield event.plain_result("错误: 无法解析文件路径")
             return
-        
+
         if not os.path.exists(real_path):
             yield event.plain_result(f"错误: 图片文件不存在: {image_path}")
             return
@@ -213,7 +209,7 @@ class NsjailPlugin(Star):
         
         real_path = self.sandbox_mgr.resolve_sandbox_path(session_id, file_path)
         if not real_path:
-            yield event.plain_result("错误: 沙箱未初始化")
+            yield event.plain_result("错误: 无法解析文件路径")
             return
         
         if not os.path.exists(real_path):

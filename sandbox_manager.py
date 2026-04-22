@@ -2,7 +2,6 @@ import re
 import glob
 import asyncio
 import os
-import tempfile
 import shutil
 from astrbot.api import logger
 from .sandbox_config import SandboxConfig
@@ -65,7 +64,7 @@ class SandboxManager:
                 target_relative = target.removeprefix('/workspace/')
                 base = os.path.abspath(sandbox_dir)
                 target_path = os.path.abspath(os.path.join(base, target_relative))
-                if not target_path.startswith(base):
+                if target_path != base and not target_path.startswith(base + os.sep):
                     logger.error(f'符号链接目标路径逃逸沙箱目录: {target}')
                     continue
 
@@ -155,19 +154,13 @@ class SandboxManager:
         # 清理 workspace 目录
         if os.path.exists(self.workspaces_dir):
             for sandbox_path in glob.glob(os.path.join(self.workspaces_dir, '*')):
-                try:
-                    shutil.rmtree(sandbox_path, ignore_errors=True)
-                    logger.info(f"清理沙箱: {sandbox_path}")
-                except Exception as e:
-                    logger.warning(f"清理沙箱失败 {sandbox_path}: {e}")
+                shutil.rmtree(sandbox_path, ignore_errors=True)
+                logger.info(f"清理沙箱: {sandbox_path}")
         
         # 清理 /tmp 目录
         for tmp_path in glob.glob('/tmp/nsjail_*'):
-            try:
-                shutil.rmtree(tmp_path, ignore_errors=True)
-                logger.info(f"清理临时目录: {tmp_path}")
-            except Exception as e:
-                logger.warning(f"清理临时目录失败 {tmp_path}: {e}")
+            shutil.rmtree(tmp_path, ignore_errors=True)
+            logger.info(f"清理临时目录: {tmp_path}")
     
     def resolve_sandbox_path(self, session_id: str, sandbox_path: str) -> str:
         """将沙箱内路径映射到宿主机真实路径"""
@@ -182,7 +175,7 @@ class SandboxManager:
         def safe_join(base: str, rel: str) -> str | None:
             base = os.path.abspath(base)
             target = os.path.abspath(os.path.join(base, rel))
-            return target if target.startswith(base) else None
+            return target if target == base or target.startswith(base + os.sep) else None
 
         # 检查自定义挂载路径
         for mount in self.config.custom_mounts:
@@ -212,8 +205,7 @@ class SandboxManager:
             timeout = min(timeout, self.config.max_timeout)
         
         # 获取或创建该会话的锁
-        if session_id not in self._create_locks:
-            self._create_locks[session_id] = asyncio.Lock()
+        self._create_locks.setdefault(session_id, asyncio.Lock())
         
         # 使用锁保护沙箱创建
         async with self._create_locks[session_id]:
