@@ -202,6 +202,7 @@ class SandboxManager:
         elif sandbox_path.startswith('/tmp') and tmp_dir:
             return safe_join(tmp_dir, sandbox_path.removeprefix('/tmp').lstrip('/'))
         else:
+            logger.warning(f"无法映射沙箱路径到宿主机路径: {sandbox_path}")
             return None
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
