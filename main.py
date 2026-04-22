@@ -249,7 +249,9 @@ class NsjailPlugin(Star):
         
         response = f"退出码: {returncode}\n输出:\n{output}"
         if len(response) > 2000:
-            response = response[:2000] + "\n...[内容已截断]"
+            head = response[:1000]
+            tail = response[-900:]
+            response = head + "\n...[内容已截断]...\n" + tail
         yield event.plain_result(response)
     
     @filter.command("nsjail-clean")
