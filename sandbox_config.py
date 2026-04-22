@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List, Dict
 import os
 
 
@@ -15,10 +14,10 @@ class SandboxConfig:
     process_limit: int = 50
     data_write_permission: str = "none"
     skills_write_permission: str = "none"
-    custom_mounts: List[Dict] = None
-    sandbox_symlinks: List[Dict] = None
-    path: List[str] = None
-    custom_env: List[str] = None
+    custom_mounts: list[dict] | None = None
+    sandbox_symlinks: list[dict] | None = None
+    path: list[str] | None = None
+    custom_env: list[str] | None = None
     cgroup_available: bool = False
     
     def __post_init__(self):

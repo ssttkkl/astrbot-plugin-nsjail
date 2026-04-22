@@ -78,7 +78,7 @@ if __name__ == '__main__':
             total_passed += passed
             total_tests += total
             category = filename.replace('results-', '').replace('.json', '')
-            print(f"{category}: {passed}/{total} ({passed*100//total}%)")
+            print(f"{category}: {passed}/{total} ({passed*100//total if total else 0}%)")
             if failed:
                 print(f"  失败用例:")
                 for f in failed[:3]:
@@ -86,4 +86,4 @@ if __name__ == '__main__':
         except FileNotFoundError:
             print(f"{filename}: 文件不存在")
     
-    print(f"\n总计: {total_passed}/{total_tests} ({total_passed*100//total_tests}%)")
+    print(f"\n总计: {total_passed}/{total_tests} ({total_passed*100//total_tests if total_tests else 0}%)")

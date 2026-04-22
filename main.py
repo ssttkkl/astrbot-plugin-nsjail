@@ -10,7 +10,7 @@ import astrbot.api.message_components as Comp
 from astrbot.core.agent.tool import FunctionTool, ToolExecResult
 from astrbot.core.agent.run_context import ContextWrapper
 from astrbot.core.astr_agent_context import AstrAgentContext
-from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+from astrbot.api.star import StarTools
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 from .sandbox_manager import SandboxManager
@@ -44,6 +44,8 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         self, context: ContextWrapper[AstrAgentContext], **kwargs
     ) -> ToolExecResult:
         command = kwargs.get("command", "")
+        if len(command) > 65535:
+            return "命令过长（最大 65535 字符）"
         timeout = kwargs.get("timeout", 30)
         
         event = context.context.event
@@ -79,9 +81,8 @@ class NsjailPlugin(Star):
         path = config.get("path", None)
         custom_env = config.get("custom_env", [])
         extra_path = config.get("extra_path", [])
-        custom_env = config.get("custom_env", [])
         
-        plugin_data_path = Path(get_astrbot_data_path()) / "plugin_data" / "astrbot_plugin_nsjail"
+        plugin_data_path = Path(StarTools.get_data_dir())
         plugin_data_path.mkdir(parents=True, exist_ok=True)
         
         # 检查 Cgroup V2 是否可用
@@ -238,8 +239,8 @@ class NsjailPlugin(Star):
             yield event.plain_result("用法: /nsjail <命令>")
             return
         
-        if len(command) > 1000:
-            yield event.plain_result("命令过长（最大 1000 字符）")
+        if len(command) > 65535:
+            yield event.plain_result("命令过长（最大 65535 字符）")
             return
         
         session_id = event.session_id or "default"

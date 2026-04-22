@@ -1,4 +1,5 @@
 import re
+import glob
 import asyncio
 import os
 import tempfile
@@ -136,7 +137,7 @@ class SandboxManager:
     
     def destroy_sandbox(self, session_id: str):
         info = self.sandboxes.pop(session_id, None)
-        self._create_locks.pop(session_id, None)  # 清理锁释放内存
+        # 不移除锁，避免并发请求持有锁时产生竞态条件
         if info:
             if os.path.exists(info['dir']):
                 shutil.rmtree(info['dir'], ignore_errors=True)
@@ -147,8 +148,6 @@ class SandboxManager:
     
     def cleanup_all_sandboxes(self):
         """启动时清理所有沙箱目录"""
-        import glob
-        
         # 清理 workspace 目录
         if os.path.exists(self.workspaces_dir):
             for sandbox_path in glob.glob(os.path.join(self.workspaces_dir, '*')):
@@ -187,27 +186,19 @@ class SandboxManager:
                 return os.path.join(os.path.expanduser(host_path), rel_path)
         
         # 标准路径映射
-        if sandbox_path.startswith('/data/'):
-            return os.path.join(data_dir, sandbox_path[6:])
-        elif sandbox_path.startswith('/data'):
-            return os.path.join(data_dir, sandbox_path[5:])
-        elif sandbox_path.startswith('/workspace/'):
-            return os.path.join(sandbox_dir, sandbox_path[11:])
+        if sandbox_path.startswith('/data'):
+            return os.path.join(data_dir, sandbox_path.removeprefix('/data').lstrip('/'))
         elif sandbox_path.startswith('/workspace'):
-            return os.path.join(sandbox_dir, sandbox_path[10:])
-        elif sandbox_path.startswith('/tmp/') and tmp_dir:
-            return os.path.join(tmp_dir, sandbox_path[5:])
+            return os.path.join(sandbox_dir, sandbox_path.removeprefix('/workspace').lstrip('/'))
         elif sandbox_path.startswith('/tmp') and tmp_dir:
-            return os.path.join(tmp_dir, sandbox_path[4:])
+            return os.path.join(tmp_dir, sandbox_path.removeprefix('/tmp').lstrip('/'))
         else:
             return os.path.join(sandbox_dir, sandbox_path.lstrip('/'))
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""
         # 如果 max_timeout 为 -1，表示无限制；否则取最小值
-        if self.config.max_timeout == -1:
-            timeout = timeout
-        else:
+        if self.config.max_timeout != -1:
             timeout = min(timeout, self.config.max_timeout)
         
         # 获取或创建该会话的锁
