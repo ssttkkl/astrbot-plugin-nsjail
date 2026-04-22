@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 
 
@@ -14,22 +14,12 @@ class SandboxConfig:
     process_limit: int = 50
     data_write_permission: str = "none"
     skills_write_permission: str = "none"
-    custom_mounts: list[dict] | None = None
-    sandbox_symlinks: list[dict] | None = None
-    path: list[str] | None = None
-    custom_env: list[str] | None = None
+    custom_mounts: list[dict] = field(default_factory=list)
+    sandbox_symlinks: list[dict] = field(default_factory=list)
+    path: list[str] = field(default_factory=lambda: ["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"])
+    custom_env: list[str] = field(default_factory=list)
     cgroup_available: bool = False
-    
-    def __post_init__(self):
-        if self.custom_mounts is None:
-            self.custom_mounts = []
-        if self.sandbox_symlinks is None:
-            self.sandbox_symlinks = []
-        if self.path is None:
-            self.path = ["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"]
-        if self.custom_env is None:
-            self.custom_env = []
-    
+
     @property
     def skills_dir(self) -> str:
         """OpenClaw 技能目录路径"""

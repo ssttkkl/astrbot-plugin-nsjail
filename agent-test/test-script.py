@@ -83,12 +83,12 @@ async def main():
         token = await login(session, username, password_md5)
         print(f"✓ 登录成功，获取 token")
 
-        with open(sys.argv[1]) as f:
+        with open(sys.argv[1], encoding='utf-8') as f:
             tests = json.load(f)
 
         results = [await run_test(session, t, f"test-{i}", token) for i, t in enumerate(tests)]
 
-    with open('test-results.json', 'w') as f:
+    with open('test-results.json', 'w', encoding='utf-8') as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
     print(f"✓ 测试完成，结果保存到 test-results.json")

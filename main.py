@@ -82,7 +82,7 @@ class NsjailPlugin(Star):
         custom_env = config.get("custom_env", [])
         extra_path = config.get("extra_path", [])
         
-        plugin_data_path = Path(StarTools.get_data_dir())
+        plugin_data_path = StarTools.get_data_dir()
         plugin_data_path.mkdir(parents=True, exist_ok=True)
         
         # 检查 Cgroup V2 是否可用
@@ -248,7 +248,9 @@ class NsjailPlugin(Star):
         output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, is_admin=is_admin)
         
         response = f"退出码: {returncode}\n输出:\n{output}"
-        yield event.plain_result(response[:2000])
+        if len(response) > 2000:
+            response = response[:2000] + "\n...[内容已截断]"
+        yield event.plain_result(response)
     
     @filter.command("nsjail-clean")
     async def handle_clean_command(self, event: AstrMessageEvent):

@@ -63,8 +63,12 @@ class SandboxManager:
                 
                 # 去掉 /workspace 前缀，因为 sandbox_dir 已经会被挂载为 /workspace
                 target_relative = target.removeprefix('/workspace/')
-                target_path = os.path.join(sandbox_dir, target_relative)
-                
+                base = os.path.abspath(sandbox_dir)
+                target_path = os.path.abspath(os.path.join(base, target_relative))
+                if not target_path.startswith(base):
+                    logger.error(f'符号链接目标路径逃逸沙箱目录: {target}')
+                    continue
+
                 # 确保目标目录存在
                 target_dir = os.path.dirname(target_path)
                 os.makedirs(target_dir, exist_ok=True)
@@ -175,6 +179,11 @@ class SandboxManager:
         tmp_dir = info.get('tmp_dir')
         data_dir = os.path.join(self.config.data_dir, "data")
         
+        def safe_join(base: str, rel: str) -> str | None:
+            base = os.path.abspath(base)
+            target = os.path.abspath(os.path.join(base, rel))
+            return target if target.startswith(base) else None
+
         # 检查自定义挂载路径
         for mount in self.config.custom_mounts:
             if not isinstance(mount, dict):
@@ -183,17 +192,17 @@ class SandboxManager:
             host_path = mount.get("host_path", "").strip()
             if sandbox_mount and host_path and sandbox_path.startswith(sandbox_mount):
                 rel_path = sandbox_path[len(sandbox_mount):].lstrip('/')
-                return os.path.join(os.path.expanduser(host_path), rel_path)
-        
+                return safe_join(os.path.expanduser(host_path), rel_path)
+
         # 标准路径映射
         if sandbox_path.startswith('/data'):
-            return os.path.join(data_dir, sandbox_path.removeprefix('/data').lstrip('/'))
+            return safe_join(data_dir, sandbox_path.removeprefix('/data').lstrip('/'))
         elif sandbox_path.startswith('/workspace'):
-            return os.path.join(sandbox_dir, sandbox_path.removeprefix('/workspace').lstrip('/'))
+            return safe_join(sandbox_dir, sandbox_path.removeprefix('/workspace').lstrip('/'))
         elif sandbox_path.startswith('/tmp') and tmp_dir:
-            return os.path.join(tmp_dir, sandbox_path.removeprefix('/tmp').lstrip('/'))
+            return safe_join(tmp_dir, sandbox_path.removeprefix('/tmp').lstrip('/'))
         else:
-            return os.path.join(sandbox_dir, sandbox_path.lstrip('/'))
+            return None
     
     async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         """在沙箱中执行命令"""

@@ -40,7 +40,7 @@ def analyze_test(test):
     return False, "执行失败"
 
 def analyze_file(filename):
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:
         tests = json.load(f)
     
     passed = 0
