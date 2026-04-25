@@ -9,8 +9,8 @@ from .. import background_tasks
 
 
 @dataclass
-class QueryBackgroundTaskTool(FunctionTool[AstrAgentContext]):
-    name: str = "query_background_task"
+class QueryBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
+    name: str = "query_background_shell_execution"
     description: str = "查询后台任务的执行状态和结果。"
     parameters: dict = Field(default_factory=lambda: {
         "type": "object",

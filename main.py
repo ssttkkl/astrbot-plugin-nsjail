@@ -9,8 +9,8 @@ from .sandbox_config import SandboxConfig
 from .tools import (
     ExecuteShellTool,
     get_tool_prompt,
-    QueryBackgroundTaskTool,
-    ListBackgroundTasksTool,
+    QueryBackgroundShellExecutionTool,
+    ListBackgroundShellExecutionsTool,
     SendSandboxImageTool,
     SendSandboxFileTool,
 )
@@ -73,8 +73,8 @@ class NsjailPlugin(Star):
                 enable_background=enable_background,
                 sandbox_mgr=self.sandbox_mgr,
             ),
-            QueryBackgroundTaskTool(),
-            ListBackgroundTasksTool(),
+            QueryBackgroundShellExecutionTool(),
+            ListBackgroundShellExecutionsTool(),
             SendSandboxImageTool(sandbox_mgr=self.sandbox_mgr),
             SendSandboxFileTool(sandbox_mgr=self.sandbox_mgr),
         )

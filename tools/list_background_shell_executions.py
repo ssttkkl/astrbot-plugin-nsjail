@@ -8,8 +8,8 @@ from .. import background_tasks
 
 
 @dataclass
-class ListBackgroundTasksTool(FunctionTool[AstrAgentContext]):
-    name: str = "list_background_tasks"
+class ListBackgroundShellExecutionsTool(FunctionTool[AstrAgentContext]):
+    name: str = "list_background_shell_executions"
     description: str = "列出所有正在运行的后台任务及其状态。"
     parameters: dict = Field(default_factory=lambda: {"type": "object", "properties": {}})
 
