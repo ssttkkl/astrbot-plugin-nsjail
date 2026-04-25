@@ -29,8 +29,6 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         "properties": {
             "command": {"type": "string", "description": "要执行的 shell 命令"},
             "timeout": {"type": "number", "description": "超时时间(秒)"},
-            "background": {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"},
-            "description": {"type": "string", "description": "后台任务的简短描述，用于后续识别"},
         },
         "required": ["command"],
     })
@@ -163,6 +161,9 @@ class NsjailPlugin(Star):
             astrbot_context=context,
         )
         self.context.add_llm_tools(execute_shell_tool)
+        if enable_background:
+            execute_shell_tool.parameters["properties"]["background"] = {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"}
+            execute_shell_tool.parameters["properties"]["description"] = {"type": "string", "description": "后台任务的简短描述（后台模式必填），用于后续识别"}
 
     @filter.llm_tool(name="query_background_task")
     async def query_background_task(self, event: AstrMessageEvent, task_id: str):
