@@ -18,13 +18,15 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 第2层：安装 JRE 和字体
+# 第2层：安装 JRE、字体、ffmpeg 和 pipx
 RUN apt-get update && apt-get install -y \
     openjdk-21-jre-headless \
     fonts-wqy-microhei \
     fonts-wqy-zenhei \
     fonts-noto-cjk \
     fontconfig \
+    ffmpeg \
+    pipx \
     && fc-cache -fv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
