@@ -1,0 +1,3 @@
+[submodule ".claude/skills/AstrBot-Skill"]
+	path = .claude/skills/AstrBot-Skill
+	url = https://github.com/xunxiing/AstrBot-Skill

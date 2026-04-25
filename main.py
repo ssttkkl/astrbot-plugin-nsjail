@@ -80,26 +80,12 @@ class NsjailPlugin(Star):
         plugin_data_path = StarTools.get_data_dir()
         plugin_data_path.mkdir(parents=True, exist_ok=True)
         
-        # 检查 Cgroup V2 是否可用
-        cgroup_available = False
-        try:
-            test_cgroup = "/sys/fs/cgroup/nsjail_test"
-            os.makedirs(test_cgroup, exist_ok=True)
-            # 尝试写入 cgroup.procs（这是 nsjail 真正需要的操作）
-            with open(f"{test_cgroup}/cgroup.procs", "w") as f:
-                f.write(str(os.getpid()))
-            os.rmdir(test_cgroup)
-            cgroup_available = True
-            logger.info("Cgroup V2 可用，将启用内存和 CPU 限制")
-        except Exception as e:
-            logger.warning(f"Cgroup V2 不可用，将跳过内存和 CPU 使用率限制: {e}")
-        
         sandbox_config = SandboxConfig(
             data_dir=str(plugin_data_path),
             max_timeout=max_timeout,
             enable_network=enable_network,
-            memory_limit_mb=memory_limit_mb if cgroup_available else -1,
-            cpu_limit_percent=cpu_limit_percent if cgroup_available else -1,
+            memory_limit_mb=memory_limit_mb,
+            cpu_limit_percent=cpu_limit_percent,
             cpu_cores_limit=cpu_cores_limit,
             process_limit=process_limit,
             data_write_permission=data_write_permission,
@@ -108,7 +94,6 @@ class NsjailPlugin(Star):
             sandbox_symlinks=sandbox_symlinks,
             path=path,
             custom_env=custom_env,
-            cgroup_available=cgroup_available
         )
         
         self.sandbox_mgr = SandboxManager(sandbox_config)
@@ -240,7 +225,7 @@ class NsjailPlugin(Star):
         
         session_id = event.session_id or "default"
         is_admin = event.is_admin()
-        output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, is_admin=is_admin)
+        output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout=self.sandbox_mgr.config.max_timeout, is_admin=is_admin)
         
         response = f"退出码: {returncode}\n输出:\n{output}"
         if len(response) > 2000:

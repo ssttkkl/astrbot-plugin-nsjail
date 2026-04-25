@@ -18,7 +18,6 @@ class SandboxConfig:
     sandbox_symlinks: list[dict] = field(default_factory=list)
     path: list[str] = field(default_factory=lambda: ["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"])
     custom_env: list[str] = field(default_factory=list)
-    cgroup_available: bool = False
 
     @property
     def skills_dir(self) -> str:

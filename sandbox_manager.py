@@ -11,10 +11,27 @@ class SandboxManager:
     """沙箱管理器"""
     def __init__(self, config: SandboxConfig):
         self.config = config
+        self.cgroup_available = self._check_cgroup()
+        if not self.cgroup_available:
+            self.config.memory_limit_mb = -1
+            self.config.cpu_limit_percent = -1
         self.sandboxes = {}
         self.workspaces_dir = os.path.join(config.data_dir, "workspaces")
         os.makedirs(self.workspaces_dir, exist_ok=True)
-        self._create_locks = {}  # 每个 session 的创建锁
+        self._create_locks = {}
+
+    def _check_cgroup(self) -> bool:
+        test_cgroup = "/sys/fs/cgroup/nsjail_test"
+        try:
+            os.makedirs(test_cgroup, exist_ok=True)
+            with open(f"{test_cgroup}/cgroup.procs", "w") as f:
+                f.write(str(os.getpid()))
+            os.rmdir(test_cgroup)
+            logger.info("Cgroup V2 可用，将启用内存和 CPU 限制")
+            return True
+        except Exception as e:
+            logger.warning(f"Cgroup V2 不可用，将跳过内存和 CPU 使用率限制: {e}")
+            return False
     
     
     def create_sandbox(self, session_id: str) -> dict:
