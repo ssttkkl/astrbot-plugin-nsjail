@@ -103,16 +103,10 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         if kwargs.get("background"):
             if not self.enable_background:
                 return "后台模式未启用"
-            timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
-            astrbot_context = context.context.context
-            execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
-            task_id = self.task_mgr.create_task(execution, astrbot_context, event, command, kwargs.get("description", ""))
+            execution = await self.sandbox_mgr.start_execution(session_id, command, min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds), is_admin)
+            task_id = self.task_mgr.create_task(execution, context.context.context, event, command, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
-        timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
-        execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
+        execution = await self.sandbox_mgr.start_execution(session_id, command, min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds), is_admin)
         await execution.wait()
-        output = execution.get_stdout() + execution.get_stderr()
-        code = execution.returncode if execution.returncode is not None else -1
-        prefix = "执行超时，当前输出" if execution.timed_out else f"退出码: {code}"
-        return f"$ {command}\n{output}\n{prefix}"
+        return execution.format_result(command)

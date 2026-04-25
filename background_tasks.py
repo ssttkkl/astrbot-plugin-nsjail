@@ -65,8 +65,7 @@ class BackgroundTaskManager:
         desc_line = f" ({task.description})" if task.description else ""
         try:
             await task.execution.wait()
-            output = task.execution.get_stdout() + task.execution.get_stderr()
-            result = f"$ {command}\n{output}\n{'执行超时' if task.execution.timed_out else f'退出码: {task.execution.returncode}'}"
+            result = task.execution.format_result(command)
             task.status = "done"
             task.result = result
             note = f"[后台任务完成] ID: {task_id}{desc_line}\n{result}"

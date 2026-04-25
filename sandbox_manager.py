@@ -9,24 +9,29 @@ from .sandbox_config import SandboxConfig
 
 
 class Execution:
-    def __init__(self, proc: asyncio.subprocess.Process):
+    def __init__(self, proc: asyncio.subprocess.Process, timeout: float | None = None):
         self._proc = proc
         self._stdout_buf = bytearray()
         self._stderr_buf = bytearray()
         self._done = False
+        self._timed_out = False
         self._returncode: int | None = None
-        self._reader_task = asyncio.create_task(self._read_streams())
+        self._reader_task = asyncio.create_task(self._read_streams(timeout))
 
-    async def _read_streams(self):
+    async def _read_streams(self, timeout: float | None):
         async def drain(stream, buf):
             if stream:
                 async for chunk in stream:
                     buf.extend(chunk)
-        await asyncio.gather(
-            drain(self._proc.stdout, self._stdout_buf),
-            drain(self._proc.stderr, self._stderr_buf),
-        )
-        self._returncode = await self._proc.wait()
+        try:
+            await asyncio.wait_for(asyncio.gather(
+                drain(self._proc.stdout, self._stdout_buf),
+                drain(self._proc.stderr, self._stderr_buf),
+            ), timeout=timeout)
+        except asyncio.TimeoutError:
+            self._timed_out = True
+            await self.kill()
+        self._returncode = self._proc.returncode
         self._done = True
 
     def get_stdout(self) -> str:
@@ -43,13 +48,19 @@ class Execution:
     def done(self) -> bool:
         return self._done
 
-    async def wait(self, timeout: float | None = None) -> int:
-        try:
-            await asyncio.wait_for(asyncio.shield(self._reader_task), timeout=timeout)
-        except asyncio.TimeoutError:
-            await self.kill()
-            raise
+    @property
+    def timed_out(self) -> bool:
+        return self._timed_out
+
+    async def wait(self) -> int:
+        await self._reader_task
         return self._returncode
+
+    def format_result(self, command: str) -> str:
+        output = self.get_stdout() + self.get_stderr()
+        code = self._returncode if self._returncode is not None else -1
+        prefix = "执行超时，当前输出" if self._timed_out else f"退出码: {code}"
+        return f"$ {command}\n{output}\n{prefix}"
 
     async def kill(self):
         try:
@@ -296,8 +307,6 @@ class SandboxManager:
         if os.path.exists(self.config.skills_dir):
             builtin_mounts.append({"host_path": self.config.skills_dir, "sandbox_path": self.config.skills_dir, "write_permission": self.config.skills_write_permission})
 
-        # 添加自定义路径映射（含内置 data/skills）
-        self._apply_custom_mounts(nsjail_cmd, is_admin, extra_mounts=builtin_mounts)
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
@@ -311,35 +320,30 @@ class SandboxManager:
             "--bindmount", "/bin:/bin:ro",
             "--bindmount", "/sbin:/sbin:ro",
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
-            "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
-            "--bindmount", f"{data_dir}:/data:{data_mount_mode}",
+            "--bindmount", f"{tmp_dir}:/tmp:rw",
             "--bindmount", f"{get_astrbot_temp_path()}:{get_astrbot_temp_path()}:ro",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/zero:/dev/zero:ro",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
         ]
-        
-        # 添加独立的共享内存（64MB）
+
         nsjail_cmd.extend(["--mount", "none:/dev/shm:tmpfs:size=67108864"])
-        
-        # 添加字体配置（用于图表渲染等）
+
         if os.path.exists("/etc/fonts"):
             nsjail_cmd.extend(["--bindmount", "/etc/fonts:/etc/fonts:ro"])
-        
-        # 网络配置：默认隔离，配置启用时才共享宿主网络
+
         if self.config.enable_network:
             nsjail_cmd.append("--disable_clone_newnet")
             nsjail_cmd.extend([
                 "--bindmount", "/etc/resolv.conf:/etc/resolv.conf:ro",
                 "--bindmount", "/etc/ssl:/etc/ssl:ro"
             ])
-            # 条件挂载证书路径（不同发行版）
             if os.path.exists("/etc/pki"):
                 nsjail_cmd.extend(["--bindmount", "/etc/pki:/etc/pki:ro"])
             if os.path.exists("/etc/ca-certificates"):
                 nsjail_cmd.extend(["--bindmount", "/etc/ca-certificates:/etc/ca-certificates:ro"])
-        
-        # 添加自定义路径映射（含内置 data/skills）
+
+        self._apply_custom_mounts(nsjail_cmd, is_admin, extra_mounts=builtin_mounts)
         
         nsjail_cmd.extend([
             "--cwd", "/workspace",
@@ -399,4 +403,4 @@ class SandboxManager:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        return Execution(proc)
+        return Execution(proc, timeout=None if timeout == -1 else timeout)
