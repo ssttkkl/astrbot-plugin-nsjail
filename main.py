@@ -33,7 +33,6 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         "required": ["command"],
     })
     sandbox_mgr: object = None
-    astrbot_context: object = None
 
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
         command = kwargs.get("command", "")
@@ -48,7 +47,8 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             if not self.enable_background:
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
-            task_id = background_tasks.create_task(self.sandbox_mgr, self.astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin, kwargs.get("description", ""))
+            astrbot_context = context.context.context
+            task_id = background_tasks.create_task(self.sandbox_mgr, astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
@@ -158,7 +158,6 @@ class NsjailPlugin(Star):
             background_timeout_seconds=background_max_timeout,
             enable_background=enable_background,
             sandbox_mgr=self.sandbox_mgr,
-            astrbot_context=context,
         )
         self.context.add_llm_tools(execute_shell_tool)
         if enable_background:
