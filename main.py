@@ -53,7 +53,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
             astrbot_context = context.context.context
-            task_id = background_tasks.create_task(self.sandbox_mgr, astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin, kwargs.get("description", ""))
+            task_id = background_tasks.create_task(self.sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
