@@ -4,6 +4,7 @@ import asyncio
 import os
 import shutil
 from astrbot.api import logger
+from astrbot.core.utils.astrbot_path import get_astrbot_temp_path
 from .sandbox_config import SandboxConfig
 
 
@@ -272,6 +273,7 @@ class SandboxManager:
             "--bindmount", "/etc/alternatives:/etc/alternatives:ro",
             "--bindmount", f"{tmp_dir}:/tmp:rw",  # 会话独立的 tmp 目录
             "--bindmount", f"{data_dir}:/data:{data_mount_mode}",
+            "--bindmount", f"{get_astrbot_temp_path()}:{get_astrbot_temp_path()}:ro",
             "--bindmount", "/dev/null:/dev/null:rw",
             "--bindmount", "/dev/zero:/dev/zero:ro",
             "--bindmount", "/dev/urandom:/dev/urandom:ro",
