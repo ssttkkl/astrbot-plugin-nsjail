@@ -34,3 +34,4 @@ async def _run(task_id, sandbox_mgr, astrbot_context, session_id, command, timeo
         _tasks[task_id] = {"status": "error", "command": command, "description": description, "result": result}
         text = f"[后台任务失败] ID: {task_id}{desc_line}\n$ {command}\n{e}"
     await astrbot_context.send_message(umo, MessageChain().message(text))
+    _tasks.pop(task_id, None)
