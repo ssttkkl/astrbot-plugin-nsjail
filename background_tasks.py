@@ -21,8 +21,6 @@ from astrbot.core.agent.tool import ToolSet
 class BackgroundTask:
     task_id: str
     command: str
-    astrbot_context: object = field(repr=False)
-    event: object = field(repr=False)
     description: str = ""
     status: str = "running"
     result: Optional[str] = None
@@ -34,7 +32,7 @@ class BackgroundTask:
             return self.execution.get_stdout() + self.execution.get_stderr()
         return ""
 
-    async def run(self, on_done: callable):
+    async def run(self, astrbot_context, event, on_done: callable):
         from astrbot.core.astr_main_agent import MainAgentBuildConfig, _get_session_conv, build_main_agent
 
         desc_line = f" ({self.description})" if self.description else ""
@@ -53,22 +51,22 @@ class BackgroundTask:
             on_done(self.task_id)
 
         task_result = {"task_id": self.task_id, "tool_name": "execute_shell", "result": result, "tool_args": {"command": self.command}}
-        session = MessageSession.from_str(self.event.unified_msg_origin)
+        session = MessageSession.from_str(event.unified_msg_origin)
         cron_event = CronMessageEvent(
-            context=self.astrbot_context,
+            context=astrbot_context,
             session=session,
             message=note,
             extras={"background_task_result": task_result},
             message_type=session.message_type,
         )
-        cron_event.role = self.event.role
+        cron_event.role = event.role
 
         config = MainAgentBuildConfig(
             tool_call_timeout=3600,
-            streaming_response=self.astrbot_context.get_config().get("provider_settings", {}).get("stream", False),
+            streaming_response=astrbot_context.get_config().get("provider_settings", {}).get("stream", False),
         )
         req = ProviderRequest()
-        conv = await _get_session_conv(event=cron_event, plugin_context=self.astrbot_context)
+        conv = await _get_session_conv(event=cron_event, plugin_context=astrbot_context)
         req.conversation = conv
         context = json.loads(conv.history)
         if context:
@@ -105,9 +103,9 @@ class BackgroundTaskManager:
 
     def create_task(self, execution: "Execution", astrbot_context, event, command: str, description: str = "") -> str:
         task_id = str(uuid.uuid4())[:8]
-        task = BackgroundTask(task_id=task_id, command=command, astrbot_context=astrbot_context, event=event, description=description, execution=execution)
+        task = BackgroundTask(task_id=task_id, command=command, description=description, execution=execution)
         self._tasks[task_id] = task
-        task.asyncio_task = asyncio.create_task(task.run(lambda tid: self._tasks.pop(tid, None)))
+        task.asyncio_task = asyncio.create_task(task.run(astrbot_context, event, lambda tid: self._tasks.pop(tid, None)))
         return task_id
 
     def cancel_task(self, task_id: str) -> bool:
