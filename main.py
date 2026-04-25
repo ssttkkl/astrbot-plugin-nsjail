@@ -66,7 +66,7 @@ class NsjailPlugin(Star):
         )
 
         self.sandbox_mgr = SandboxManager(sandbox_config)
-        task_mgr = BackgroundTaskManager()
+        self.task_mgr = BackgroundTaskManager()
 
         self.context.add_llm_tools(
             ExecuteShellTool(
@@ -75,11 +75,11 @@ class NsjailPlugin(Star):
                 background_timeout_seconds=background_max_timeout,
                 enable_background=enable_background,
                 sandbox_mgr=self.sandbox_mgr,
-                task_mgr=task_mgr,
+                task_mgr=self.task_mgr,
             ),
-            QueryBackgroundShellExecutionTool(task_mgr=task_mgr),
-            ListBackgroundShellExecutionsTool(task_mgr=task_mgr),
-            CancelBackgroundShellExecutionTool(task_mgr=task_mgr),
+            QueryBackgroundShellExecutionTool(task_mgr=self.task_mgr),
+            ListBackgroundShellExecutionsTool(task_mgr=self.task_mgr),
+            CancelBackgroundShellExecutionTool(task_mgr=self.task_mgr),
             SendSandboxImageTool(sandbox_mgr=self.sandbox_mgr),
             SendSandboxFileTool(sandbox_mgr=self.sandbox_mgr),
         )
@@ -90,31 +90,49 @@ class NsjailPlugin(Star):
     async def on_llm_request(self, event: AstrMessageEvent, request: ProviderRequest) -> None:
         request.system_prompt = request.system_prompt.replace(self._COMPUTER_USE_NOTICE, "")
 
-    @filter.command("nsjail")
-    async def handle_nsjail_command(self, event: AstrMessageEvent):
-        """处理 /nsjail 命令"""
+    def _parse_command(self, event: AstrMessageEvent, prefix: str) -> str | None:
         full_msg = event.message_str.strip()
-        if full_msg.startswith('/nsjail'):
-            command = full_msg[7:].strip()
-        elif full_msg.startswith('nsjail'):
-            command = full_msg[6:].strip()
-        else:
-            command = full_msg
+        for p in (f'/{prefix}', prefix):
+            if full_msg.startswith(p):
+                return full_msg[len(p):].strip()
+        return full_msg
 
+    @filter.command("exec")
+    async def handle_exec_command(self, event: AstrMessageEvent):
+        """处理 /exec 命令"""
+        command = self._parse_command(event, "exec")
         if not command:
-            yield event.plain_result("用法: /nsjail <命令>")
+            yield event.plain_result("用法: /exec <命令>")
             return
-
         if len(command) > 65535:
             yield event.plain_result("命令过长（最大 65535 字符）")
             return
-
         session_id = event.session_id or "default"
         is_admin = event.is_admin()
         timeout = self.sandbox_mgr.config.max_timeout
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout=timeout, is_admin=is_admin)
         await execution.wait()
         yield event.plain_result(execution.format_result(command))
+
+    @filter.command("exec_bg")
+    async def handle_exec_bg_command(self, event: AstrMessageEvent):
+        """处理 /exec_bg 命令"""
+        if not self.sandbox_mgr.config.enable_background:
+            yield event.plain_result("后台模式未启用")
+            return
+        command = self._parse_command(event, "exec_bg")
+        if not command:
+            yield event.plain_result("用法: /exec_bg <命令>")
+            return
+        if len(command) > 65535:
+            yield event.plain_result("命令过长（最大 65535 字符）")
+            return
+        session_id = event.session_id or "default"
+        is_admin = event.is_admin()
+        timeout = self.sandbox_mgr.config.background_max_timeout
+        execution = await self.sandbox_mgr.start_execution(session_id, command, timeout=timeout, is_admin=is_admin)
+        task_id = self.task_mgr.create_task(execution, self.context, event, command)
+        yield event.plain_result(f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。")
 
     @filter.command("nsjail-clean")
     async def handle_clean_command(self, event: AstrMessageEvent):
