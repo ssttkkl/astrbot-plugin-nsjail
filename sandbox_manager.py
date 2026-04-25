@@ -101,6 +101,9 @@ class Execution:
                 return f"$ {command}\n{output}\n{prefix}\n输出过长，已写入文件（共 {total_size // 1024}KB）"
 
         output = await self.get_stdout() + await self.get_stderr()
+        for path in (self._stdout_path, self._stderr_path):
+            if path and os.path.exists(path):
+                os.unlink(path)
         return f"$ {command}\n{output}\n{prefix}"
 
     async def kill(self):
