@@ -8,6 +8,57 @@ from astrbot.core.utils.astrbot_path import get_astrbot_temp_path
 from .sandbox_config import SandboxConfig
 
 
+class Execution:
+    def __init__(self, proc: asyncio.subprocess.Process):
+        self._proc = proc
+        self._stdout_buf = bytearray()
+        self._stderr_buf = bytearray()
+        self._done = False
+        self._returncode: int | None = None
+        self._reader_task = asyncio.create_task(self._read_streams())
+
+    async def _read_streams(self):
+        async def drain(stream, buf):
+            if stream:
+                async for chunk in stream:
+                    buf.extend(chunk)
+        await asyncio.gather(
+            drain(self._proc.stdout, self._stdout_buf),
+            drain(self._proc.stderr, self._stderr_buf),
+        )
+        self._returncode = await self._proc.wait()
+        self._done = True
+
+    def get_stdout(self) -> str:
+        return self._stdout_buf.decode("utf-8", errors="replace")
+
+    def get_stderr(self) -> str:
+        return self._stderr_buf.decode("utf-8", errors="replace")
+
+    @property
+    def returncode(self) -> int | None:
+        return self._returncode
+
+    @property
+    def done(self) -> bool:
+        return self._done
+
+    async def wait(self, timeout: float | None = None) -> int:
+        try:
+            await asyncio.wait_for(asyncio.shield(self._reader_task), timeout=timeout)
+        except asyncio.TimeoutError:
+            await self.kill()
+            raise
+        return self._returncode
+
+    async def kill(self):
+        try:
+            self._proc.kill()
+            await self._proc.wait()
+        except Exception:
+            pass
+
+
 class SandboxManager:
     """沙箱管理器"""
     def __init__(self, config: SandboxConfig):
@@ -217,8 +268,8 @@ class SandboxManager:
             logger.warning(f"无法映射沙箱路径到宿主机路径: {sandbox_path}")
             return None
     
-    async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
-        """在沙箱中执行命令"""
+    async def start_execution(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> "Execution":
+        """在沙箱中启动命令，立即返回 Execution 对象"""
         # 如果 max_timeout 为 -1，表示无限制；否则取最小值
         if self.config.max_timeout != -1:
             timeout = min(timeout, self.config.max_timeout)
@@ -367,21 +418,21 @@ class SandboxManager:
         ])
         
         logger.info(f"执行 nsjail 命令: {' '.join(nsjail_cmd)}")
-        
+
+        proc = await asyncio.create_subprocess_exec(
+            *nsjail_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        return Execution(proc)
+
+    async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *nsjail_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT
-            )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=None if timeout == -1 else timeout + 5)
-            return stdout.decode('utf-8', errors='replace'), proc.returncode
-        except asyncio.TimeoutError:
-            try:
-                proc.kill()
-                await proc.wait()
-            except Exception:
-                pass
-            return "执行超时", -1
+            execution = await self.start_execution(session_id, command, timeout, is_admin)
         except Exception as e:
             return f"执行错误: {str(e)}", -1
+        try:
+            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
+        except asyncio.TimeoutError:
+            return "执行超时", -1
+        return execution.get_stdout() + execution.get_stderr(), execution.returncode
