@@ -19,7 +19,10 @@ from astrbot.core.agent.tool import ToolSet
 
 @dataclass
 class BackgroundTask:
+    task_id: str
     command: str
+    astrbot_context: object = field(repr=False)
+    event: object = field(repr=False)
     description: str = ""
     status: str = "running"
     result: Optional[str] = None
@@ -31,69 +34,41 @@ class BackgroundTask:
             return self.execution.get_stdout() + self.execution.get_stderr()
         return ""
 
-
-class BackgroundTaskManager:
-    def __init__(self):
-        self._tasks: dict[str, BackgroundTask] = {}
-
-    def create_task(self, execution: "Execution", astrbot_context, event, command: str, description: str = "") -> str:
-        task_id = str(uuid.uuid4())[:8]
-        task = BackgroundTask(command=command, description=description, execution=execution)
-        self._tasks[task_id] = task
-        task.asyncio_task = asyncio.create_task(self._run(task_id, astrbot_context, event, command))
-        return task_id
-
-    def cancel_task(self, task_id: str) -> bool:
-        task = self._tasks.get(task_id)
-        if not task or task.status != "running":
-            return False
-        if task.asyncio_task:
-            task.asyncio_task.cancel()
-        self._tasks.pop(task_id, None)
-        return True
-
-    def query_task(self, task_id: str) -> Optional[BackgroundTask]:
-        return self._tasks.get(task_id)
-
-    def list_tasks(self) -> dict[str, BackgroundTask]:
-        return dict(self._tasks)
-
-    async def _run(self, task_id, astrbot_context, event, command):
+    async def run(self, on_done: callable):
         from astrbot.core.astr_main_agent import MainAgentBuildConfig, _get_session_conv, build_main_agent
 
-        task = self._tasks[task_id]
-        desc_line = f" ({task.description})" if task.description else ""
+        desc_line = f" ({self.description})" if self.description else ""
         try:
-            await task.execution.wait()
-            result = task.execution.format_result(command)
-            task.status = "done"
-            task.result = result
-            note = f"[后台任务完成] ID: {task_id}{desc_line}\n{result}"
+            await self.execution.wait()
+            result = self.execution.format_result(self.command)
+            self.status = "done"
+            self.result = result
+            note = f"[后台任务完成] ID: {self.task_id}{desc_line}\n{result}"
         except Exception as e:
             result = str(e)
-            task.status = "error"
-            task.result = result
-            note = f"[后台任务失败] ID: {task_id}{desc_line}\n$ {command}\n{e}"
+            self.status = "error"
+            self.result = result
+            note = f"[后台任务失败] ID: {self.task_id}{desc_line}\n$ {self.command}\n{e}"
         finally:
-            self._tasks.pop(task_id, None)
+            on_done(self.task_id)
 
-        task_result = {"task_id": task_id, "tool_name": "execute_shell", "result": result, "tool_args": {"command": command}}
-        session = MessageSession.from_str(event.unified_msg_origin)
+        task_result = {"task_id": self.task_id, "tool_name": "execute_shell", "result": result, "tool_args": {"command": self.command}}
+        session = MessageSession.from_str(self.event.unified_msg_origin)
         cron_event = CronMessageEvent(
-            context=astrbot_context,
+            context=self.astrbot_context,
             session=session,
             message=note,
             extras={"background_task_result": task_result},
             message_type=session.message_type,
         )
-        cron_event.role = event.role
+        cron_event.role = self.event.role
 
         config = MainAgentBuildConfig(
             tool_call_timeout=3600,
-            streaming_response=astrbot_context.get_config().get("provider_settings", {}).get("stream", False),
+            streaming_response=self.astrbot_context.get_config().get("provider_settings", {}).get("stream", False),
         )
         req = ProviderRequest()
-        conv = await _get_session_conv(event=cron_event, plugin_context=astrbot_context)
+        conv = await _get_session_conv(event=cron_event, plugin_context=self.astrbot_context)
         req.conversation = conv
         context = json.loads(conv.history)
         if context:
@@ -117,8 +92,35 @@ class BackgroundTaskManager:
             req.func_tool = ToolSet()
         req.func_tool.add_tool(SEND_MESSAGE_TO_USER_TOOL)
 
-        result_obj = await build_main_agent(event=cron_event, plugin_context=astrbot_context, config=config, req=req)
+        result_obj = await build_main_agent(event=cron_event, plugin_context=self.astrbot_context, config=config, req=req)
         if not result_obj:
             return
         async for _ in result_obj.agent_runner.step_until_done(30):
             pass
+
+
+class BackgroundTaskManager:
+    def __init__(self):
+        self._tasks: dict[str, BackgroundTask] = {}
+
+    def create_task(self, execution: "Execution", astrbot_context, event, command: str, description: str = "") -> str:
+        task_id = str(uuid.uuid4())[:8]
+        task = BackgroundTask(task_id=task_id, command=command, astrbot_context=astrbot_context, event=event, description=description, execution=execution)
+        self._tasks[task_id] = task
+        task.asyncio_task = asyncio.create_task(task.run(lambda tid: self._tasks.pop(tid, None)))
+        return task_id
+
+    def cancel_task(self, task_id: str) -> bool:
+        task = self._tasks.get(task_id)
+        if not task or task.status != "running":
+            return False
+        if task.asyncio_task:
+            task.asyncio_task.cancel()
+        self._tasks.pop(task_id, None)
+        return True
+
+    def query_task(self, task_id: str) -> Optional[BackgroundTask]:
+        return self._tasks.get(task_id)
+
+    def list_tasks(self) -> dict[str, BackgroundTask]:
+        return dict(self._tasks)

@@ -99,14 +99,16 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         event = context.context.event
         session_id = event.session_id or "default"
         is_admin = event.is_admin()
+        timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
+        bg_timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
 
         if kwargs.get("background"):
             if not self.enable_background:
                 return "后台模式未启用"
-            execution = await self.sandbox_mgr.start_execution(session_id, command, min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds), is_admin)
+            execution = await self.sandbox_mgr.start_execution(session_id, command, bg_timeout, is_admin)
             task_id = self.task_mgr.create_task(execution, context.context.context, event, command, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
-        execution = await self.sandbox_mgr.start_execution(session_id, command, min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds), is_admin)
+        execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
         await execution.wait()
         return execution.format_result(command)
