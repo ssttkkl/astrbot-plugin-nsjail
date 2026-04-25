@@ -97,10 +97,7 @@ class NsjailPlugin(Star):
         )
         
         self.sandbox_mgr = SandboxManager(sandbox_config)
-        
-        # 启动时清理所有沙箱目录
-        self.sandbox_mgr.cleanup_all_sandboxes()
-        
+
         # 动态生成权限描述
         data_perm_desc = {
             "all": "所有用户可读写",

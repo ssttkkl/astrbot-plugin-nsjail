@@ -19,6 +19,7 @@ class SandboxManager:
         self.workspaces_dir = os.path.join(config.data_dir, "workspaces")
         os.makedirs(self.workspaces_dir, exist_ok=True)
         self._create_locks = {}
+        self.cleanup_all_sandboxes()
 
     def _check_cgroup(self) -> bool:
         test_cgroup = "/sys/fs/cgroup/nsjail_test"
