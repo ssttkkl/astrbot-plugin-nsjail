@@ -9,13 +9,14 @@ from .sandbox_config import SandboxConfig
 
 
 class Execution:
-    def __init__(self, proc: asyncio.subprocess.Process, timeout: float | None = None):
+    def __init__(self, proc: asyncio.subprocess.Process, timeout: float | None = None, tmp_dir: str | None = None):
         self._proc = proc
         self._stdout_buf = bytearray()
         self._stderr_buf = bytearray()
         self._done = False
         self._timed_out = False
         self._returncode: int | None = None
+        self._tmp_dir = tmp_dir
         self._reader_task = asyncio.create_task(self._read_streams(timeout))
 
     async def _read_streams(self, timeout: float | None):
@@ -56,19 +57,37 @@ class Execution:
         await self._reader_task
         return self._returncode
 
+    _INLINE_LIMIT = 30 * 1024       # 30 KB
+    _FILE_LIMIT   = 64 * 1024 * 1024  # 64 MB
+
     @staticmethod
-    def _truncate(text: str, limit: int = 2000) -> str:
-        if len(text) <= limit:
+    def _truncate_bytes(text: str, limit: int) -> str:
+        encoded = text.encode("utf-8")
+        if len(encoded) <= limit:
             return text
         half = limit // 2
-        return text[:half] + "\n...[已截断]...\n" + text[-(limit - half):]
+        return encoded[:half].decode("utf-8", errors="replace") + "\n...[已截断]...\n" + encoded[-half:].decode("utf-8", errors="replace")
 
     def format_result(self, command: str) -> str:
-        stdout = self._truncate(self.get_stdout())
-        stderr = self._truncate(self.get_stderr())
+        tmp_dir = self._tmp_dir
+        stdout = self.get_stdout()
+        stderr = self.get_stderr()
         output = stdout + stderr
         code = self._returncode if self._returncode is not None else -1
         prefix = "执行超时，当前输出" if self._timed_out else f"退出码: {code}"
+
+        output_bytes = len(output.encode("utf-8"))
+        if output_bytes > self._INLINE_LIMIT and tmp_dir:
+            import time
+            results_dir = os.path.join(tmp_dir, "tool-results")
+            os.makedirs(results_dir, exist_ok=True)
+            filename = f"{int(time.time() * 1000)}.txt"
+            filepath = os.path.join(results_dir, filename)
+            content = output if output_bytes <= self._FILE_LIMIT else self._truncate_bytes(output, self._FILE_LIMIT)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+            return f"$ {command}\n输出已写入 /tmp/tool-results/{filename}（{output_bytes // 1024}KB）\n{prefix}"
+
         return f"$ {command}\n{output}\n{prefix}"
 
     async def kill(self):
@@ -412,4 +431,4 @@ class SandboxManager:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        return Execution(proc, timeout=None if timeout == -1 else timeout)
+        return Execution(proc, timeout=None if timeout == -1 else timeout, tmp_dir=tmp_dir)
