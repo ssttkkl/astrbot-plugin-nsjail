@@ -69,6 +69,16 @@ def get_tool_prompt(config: SandboxConfig) -> str:
     }
     data_perm = perm_desc.get(config.data_write_permission, "只读")
     skills_perm = perm_desc.get(config.skills_write_permission, "只读")
+    bg_section = ""
+    if config.enable_background:
+        bg_section = f"""
+后台执行模式（background=true）：
+- 适用场景：预计耗时较长（>10秒）、编译/下载/训练等任务、用户无需等待的操作
+- 不适用：需要立即返回结果、交互式命令、简单查询
+- 最大超时：{config.background_max_timeout}秒
+- 任务完成后会自动将结果发送到当前会话，无需轮询
+- 必须提供 description 参数简短描述任务目的
+"""
     network = "已启用" if config.enable_network else "已禁用"
     memory = f"{config.memory_limit_mb}MB" if config.memory_limit_mb > 0 else "无限制"
     cpu = f"{config.cpu_limit_percent}%" if config.cpu_limit_percent > 0 else "无限制"
@@ -105,7 +115,7 @@ def get_tool_prompt(config: SandboxConfig) -> str:
 - 内存限制：{memory}
 - CPU 使用率：{cpu}
 - CPU 核数：{cpu_cores}
-- 网络访问：{network}"""
+- 网络访问：{network}{bg_section}"""
 
 
 class NsjailPlugin(Star):
