@@ -11,6 +11,7 @@ from .tools import (
     get_tool_prompt,
     QueryBackgroundShellExecutionTool,
     ListBackgroundShellExecutionsTool,
+    CancelBackgroundShellExecutionTool,
     SendSandboxImageTool,
     SendSandboxFileTool,
 )
@@ -75,6 +76,7 @@ class NsjailPlugin(Star):
             ),
             QueryBackgroundShellExecutionTool(),
             ListBackgroundShellExecutionsTool(),
+            CancelBackgroundShellExecutionTool(),
             SendSandboxImageTool(sandbox_mgr=self.sandbox_mgr),
             SendSandboxFileTool(sandbox_mgr=self.sandbox_mgr),
         )

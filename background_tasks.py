@@ -11,15 +11,27 @@ from astrbot.core.platform.astr_message_event import MessageSession
 from astrbot.core.provider.entities import ProviderRequest
 from astrbot.core.agent.tool import ToolSet
 
-# task_id -> {"status": "running"|"done"|"error", "command": str, "description": str, "result": str}
+# task_id -> {"status": "running"|"done"|"error", "command": str, "description": str, "result": str, "asyncio_task": Task}
 _tasks: dict = {}
 
 
 def create_task(sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, description: str = "") -> str:
     task_id = str(uuid.uuid4())[:8]
-    _tasks[task_id] = {"status": "running", "command": command, "description": description, "result": None}
-    asyncio.create_task(_run(task_id, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin))
+    _tasks[task_id] = {"status": "running", "command": command, "description": description, "result": None, "asyncio_task": None}
+    t = asyncio.create_task(_run(task_id, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin))
+    _tasks[task_id]["asyncio_task"] = t
     return task_id
+
+
+def cancel_task(task_id: str) -> bool:
+    task = _tasks.get(task_id)
+    if not task or task["status"] != "running":
+        return False
+    t = task.get("asyncio_task")
+    if t:
+        t.cancel()
+    _tasks.pop(task_id, None)
+    return True
 
 
 def query_task(task_id: str) -> dict | None:
