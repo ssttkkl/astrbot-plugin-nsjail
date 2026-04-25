@@ -91,14 +91,16 @@ class Execution:
             stderr_size = os.path.getsize(self._stderr_path) if self._stderr_path and os.path.exists(self._stderr_path) else 0
             total_size = stdout_size + stderr_size
             if total_size > self._INLINE_LIMIT:
-                async def read_head(path, size) -> str:
-                    if not path or size == 0:
+                async def read_head(path, limit) -> str:
+                    if not path or limit <= 0:
                         return ""
-                    limit = int(self._INLINE_LIMIT * size / total_size)
                     async with aiofiles.open(path, "rb") as f:
                         return (await f.read(limit)).decode("utf-8", errors="replace")
-                stderr_part = await read_head(self._stderr_path, stderr_size)
-                output = await read_head(self._stdout_path, stdout_size) + (f"\n[stderr]\n{stderr_part}" if stderr_part else "")
+                stderr_limit = min(stderr_size, self._INLINE_LIMIT)
+                stdout_limit = min(stdout_size, self._INLINE_LIMIT - stderr_limit)
+                stderr_part = await read_head(self._stderr_path, stderr_limit)
+                stdout_part = await read_head(self._stdout_path, stdout_limit)
+                output = stdout_part + (f"\n[stderr]\n{stderr_part}" if stderr_part else "")
                 return f"$ {command}\n{output}\n{prefix}\n输出过长，已写入文件（共 {total_size // 1024}KB）"
 
         stdout = await self.get_stdout()
