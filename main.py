@@ -30,6 +30,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             "command": {"type": "string", "description": "要执行的 shell 命令"},
             "timeout": {"type": "number", "description": "超时时间(秒)"},
             "background": {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"},
+            "description": {"type": "string", "description": "后台任务的简短描述，用于后续识别"},
         },
         "required": ["command"],
     })
@@ -49,7 +50,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             if not self.enable_background:
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
-            task_id = background_tasks.create_task(self.sandbox_mgr, self.astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin)
+            task_id = background_tasks.create_task(self.sandbox_mgr, self.astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
