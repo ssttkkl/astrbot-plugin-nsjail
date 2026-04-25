@@ -184,6 +184,16 @@ class NsjailPlugin(Star):
         else:
             yield event.plain_result(f"[任务{task_id}] 状态: {status}\n{task['result']}")
 
+    @filter.llm_tool(name="list_background_tasks")
+    async def list_background_tasks(self, event: AstrMessageEvent):
+        """列出所有后台任务及其状态。"""
+        tasks = background_tasks.list_tasks()
+        if not tasks:
+            yield event.plain_result("当前没有后台任务")
+            return
+        lines = [f"[{tid}] {t['status']} - {t['description'] or t['command'][:40]}" for tid, t in tasks.items()]
+        yield event.plain_result("\n".join(lines))
+
     _COMPUTER_USE_NOTICE = "User has not enabled the Computer Use feature. You cannot use shell or Python to perform skills. If you need to use these capabilities, ask the user to enable Computer Use in the AstrBot WebUI -> Config.\n"
 
     @filter.on_llm_request()

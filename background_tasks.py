@@ -17,6 +17,10 @@ def query_task(task_id: str) -> dict | None:
     return _tasks.get(task_id)
 
 
+def list_tasks() -> dict:
+    return dict(_tasks)
+
+
 async def _run(task_id, sandbox_mgr, astrbot_context, session_id, command, timeout, is_admin, umo):
     description = _tasks[task_id]["description"]
     desc_line = f" ({description})" if description else ""
