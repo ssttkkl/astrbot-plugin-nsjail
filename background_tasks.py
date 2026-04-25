@@ -1,6 +1,11 @@
 import asyncio
 import json
 import uuid
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from sandbox_manager import Execution
 
 from astrbot.core.astr_main_agent_resources import (
     BACKGROUND_TASK_RESULT_WOKE_SYSTEM_PROMPT,
@@ -12,57 +17,63 @@ from astrbot.core.provider.entities import ProviderRequest
 from astrbot.core.agent.tool import ToolSet
 
 
+@dataclass
+class BackgroundTask:
+    command: str
+    description: str = ""
+    status: str = "running"
+    result: Optional[str] = None
+    asyncio_task: Optional[asyncio.Task] = field(default=None, repr=False)
+    execution: Optional["Execution"] = field(default=None, repr=False)
+
+    def current_output(self) -> str:
+        if self.execution and self.status == "running":
+            return self.execution.get_stdout() + self.execution.get_stderr()
+        return ""
+
+
 class BackgroundTaskManager:
     def __init__(self):
-        self._tasks: dict = {}
+        self._tasks: dict[str, BackgroundTask] = {}
 
-    def create_task(self, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, description: str = "") -> str:
+    def create_task(self, execution: "Execution", astrbot_context, event, command: str, description: str = "") -> str:
         task_id = str(uuid.uuid4())[:8]
-        self._tasks[task_id] = {"status": "running", "command": command, "description": description, "result": None, "asyncio_task": None, "execution": None}
-        t = asyncio.create_task(self._run(task_id, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin))
-        self._tasks[task_id]["asyncio_task"] = t
+        task = BackgroundTask(command=command, description=description, execution=execution)
+        self._tasks[task_id] = task
+        task.asyncio_task = asyncio.create_task(self._run(task_id, astrbot_context, event, command))
         return task_id
 
     def cancel_task(self, task_id: str) -> bool:
         task = self._tasks.get(task_id)
-        if not task or task["status"] != "running":
+        if not task or task.status != "running":
             return False
-        t = task.get("asyncio_task")
-        if t:
-            t.cancel()
+        if task.asyncio_task:
+            task.asyncio_task.cancel()
         self._tasks.pop(task_id, None)
         return True
 
-    def query_task(self, task_id: str) -> dict | None:
-        task = self._tasks.get(task_id)
-        if not task:
-            return None
-        result = dict(task)
-        execution = task.get("execution")
-        if execution and task["status"] == "running":
-            result["current_output"] = execution.get_stdout() + execution.get_stderr()
-        return result
+    def query_task(self, task_id: str) -> Optional[BackgroundTask]:
+        return self._tasks.get(task_id)
 
-    def list_tasks(self) -> dict:
+    def list_tasks(self) -> dict[str, BackgroundTask]:
         return dict(self._tasks)
 
-    async def _run(self, task_id, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin):
+    async def _run(self, task_id, astrbot_context, event, command):
         from astrbot.core.astr_main_agent import MainAgentBuildConfig, _get_session_conv, build_main_agent
 
-        description = self._tasks[task_id]["description"]
-        desc_line = f" ({description})" if description else ""
+        task = self._tasks[task_id]
+        desc_line = f" ({task.description})" if task.description else ""
         try:
-            execution = await sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
-            self._tasks[task_id]["execution"] = execution
-            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
-            output = execution.get_stdout() + execution.get_stderr()
-            code = execution.returncode
-            result = f"$ {command}\n{output}\n退出码: {code}"
-            self._tasks[task_id].update({"status": "done", "result": result})
+            await task.execution.wait()
+            output = task.execution.get_stdout() + task.execution.get_stderr()
+            result = f"$ {command}\n{output}\n{'执行超时' if task.execution.timed_out else f'退出码: {task.execution.returncode}'}"
+            task.status = "done"
+            task.result = result
             note = f"[后台任务完成] ID: {task_id}{desc_line}\n{result}"
         except Exception as e:
             result = str(e)
-            self._tasks[task_id].update({"status": "error", "result": result})
+            task.status = "error"
+            task.result = result
             note = f"[后台任务失败] ID: {task_id}{desc_line}\n$ {command}\n{e}"
         finally:
             self._tasks.pop(task_id, None)

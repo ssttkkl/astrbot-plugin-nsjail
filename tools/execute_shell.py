@@ -105,16 +105,14 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
             astrbot_context = context.context.context
-            task_id = self.task_mgr.create_task(self.sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, kwargs.get("description", ""))
+            execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
+            task_id = self.task_mgr.create_task(execution, astrbot_context, event, command, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
-        try:
-            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
-        except asyncio.TimeoutError:
-            pass
+        await execution.wait()
         output = execution.get_stdout() + execution.get_stderr()
         code = execution.returncode if execution.returncode is not None else -1
-        prefix = "执行超时，当前输出" if execution.returncode is None else f"退出码: {code}"
+        prefix = "执行超时，当前输出" if execution.timed_out else f"退出码: {code}"
         return f"$ {command}\n{output}\n{prefix}"
