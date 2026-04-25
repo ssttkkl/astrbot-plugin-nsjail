@@ -56,8 +56,17 @@ class Execution:
         await self._reader_task
         return self._returncode
 
+    @staticmethod
+    def _truncate(text: str, limit: int = 2000) -> str:
+        if len(text) <= limit:
+            return text
+        half = limit // 2
+        return text[:half] + "\n...[已截断]...\n" + text[-(limit - half):]
+
     def format_result(self, command: str) -> str:
-        output = self.get_stdout() + self.get_stderr()
+        stdout = self._truncate(self.get_stdout())
+        stderr = self._truncate(self.get_stderr())
+        output = stdout + stderr
         code = self._returncode if self._returncode is not None else -1
         prefix = "执行超时，当前输出" if self._timed_out else f"退出码: {code}"
         return f"$ {command}\n{output}\n{prefix}"
