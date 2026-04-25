@@ -3,6 +3,7 @@ import glob
 import asyncio
 import os
 import shutil
+import time
 import aiofiles
 from astrbot.api import logger
 from astrbot.core.utils.astrbot_path import get_astrbot_temp_path
@@ -19,7 +20,6 @@ class Execution:
         if tmp_dir:
             results_dir = os.path.join(tmp_dir, "tool-results")
             os.makedirs(results_dir, exist_ok=True)
-            import time
             ts = int(time.time() * 1000)
             self._stdout_path = os.path.join(results_dir, f"{ts}.stdout")
             self._stderr_path = os.path.join(results_dir, f"{ts}.stderr")
@@ -94,8 +94,9 @@ class Execution:
                 async def read_head(path, size) -> str:
                     if not path or size == 0:
                         return ""
+                    limit = int(self._INLINE_LIMIT * size / total_size)
                     async with aiofiles.open(path, "rb") as f:
-                        return (await f.read(self._INLINE_LIMIT)).decode("utf-8", errors="replace")
+                        return (await f.read(limit)).decode("utf-8", errors="replace")
                 output = await read_head(self._stdout_path, stdout_size) + await read_head(self._stderr_path, stderr_size)
                 return f"$ {command}\n{output}\n{prefix}\n输出过长，已写入文件（共 {total_size // 1024}KB）"
 
@@ -108,6 +109,9 @@ class Execution:
             await self._proc.wait()
         except Exception:
             pass
+        for path in (self._stdout_path, self._stderr_path):
+            if path and os.path.exists(path):
+                os.unlink(path)
 
 
 class SandboxManager:
