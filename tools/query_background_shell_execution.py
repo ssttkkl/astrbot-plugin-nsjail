@@ -27,5 +27,6 @@ class QueryBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
             return f"任务 {task_id} 不存在"
         status = task["status"]
         if status == "running":
-            return f"任务 {task_id} 正在运行中..."
+            current = task.get("current_output", "")
+            return f"任务 {task_id} 正在运行中...\n当前输出:\n{current}" if current else f"任务 {task_id} 正在运行中..."
         return f"[任务{task_id}] 状态: {status}\n{task['result']}"

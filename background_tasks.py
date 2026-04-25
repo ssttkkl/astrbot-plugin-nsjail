@@ -17,7 +17,7 @@ _tasks: dict = {}
 
 def create_task(sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, description: str = "") -> str:
     task_id = str(uuid.uuid4())[:8]
-    _tasks[task_id] = {"status": "running", "command": command, "description": description, "result": None, "asyncio_task": None}
+    _tasks[task_id] = {"status": "running", "command": command, "description": description, "result": None, "asyncio_task": None, "execution": None}
     t = asyncio.create_task(_run(task_id, sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin))
     _tasks[task_id]["asyncio_task"] = t
     return task_id
@@ -35,7 +35,14 @@ def cancel_task(task_id: str) -> bool:
 
 
 def query_task(task_id: str) -> dict | None:
-    return _tasks.get(task_id)
+    task = _tasks.get(task_id)
+    if not task:
+        return None
+    result = dict(task)
+    execution = task.get("execution")
+    if execution and task["status"] == "running":
+        result["current_output"] = execution.get_stdout() + execution.get_stderr()
+    return result
 
 
 def list_tasks() -> dict:
@@ -48,7 +55,11 @@ async def _run(task_id, sandbox_mgr, astrbot_context, event, session_id, command
     description = _tasks[task_id]["description"]
     desc_line = f" ({description})" if description else ""
     try:
-        output, code = await sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
+        execution = await sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
+        _tasks[task_id]["execution"] = execution
+        await execution.wait(timeout=None if timeout == -1 else timeout + 5)
+        output = execution.get_stdout() + execution.get_stderr()
+        code = execution.returncode
         result = f"$ {command}\n{output}\n退出码: {code}"
         _tasks[task_id].update({"status": "done", "result": result})
         note = f"[后台任务完成] ID: {task_id}{desc_line}\n{result}"
