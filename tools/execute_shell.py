@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import platform
 
 from astrbot.core.agent.tool import FunctionTool, ToolExecResult
@@ -9,6 +10,8 @@ from pydantic.dataclasses import dataclass
 
 from ..sandbox_config import SandboxConfig
 from ..background_tasks import BackgroundTaskManager
+
+logger = logging.getLogger(__name__)
 
 
 def get_tool_prompt(config: SandboxConfig) -> str:
@@ -107,8 +110,12 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             bg_timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
             execution = await self.sandbox_mgr.start_execution(session_id, command, bg_timeout, is_admin)
             task_id = self.task_mgr.create_task(execution, context.context.context, event, command, kwargs.get("description", ""))
+            logger.info(f"[execute_shell] bg task_id={task_id} cmd={command!r}")
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
         await execution.wait()
-        return await execution.format_result(command)
+        result = await execution.format_result(command)
+        preview = result.split("\n")[1][:50] if "\n" in result else result[:50]
+        logger.info(f"[execute_shell] done code={execution.returncode} timed_out={execution.timed_out} preview={preview!r}")
+        return result

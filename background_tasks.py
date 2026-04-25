@@ -1,11 +1,14 @@
 import asyncio
 import json
+import logging
 import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from sandbox_manager import Execution
+
+logger = logging.getLogger(__name__)
 
 from astrbot.core.astr_main_agent_resources import (
     BACKGROUND_TASK_RESULT_WOKE_SYSTEM_PROMPT,
@@ -36,16 +39,19 @@ class BackgroundTask:
         from astrbot.core.astr_main_agent import MainAgentBuildConfig, _get_session_conv, build_main_agent
 
         desc_line = f" ({self.description})" if self.description else ""
+        logger.info(f"[bg_task] start task_id={self.task_id}{desc_line} cmd={self.command!r}")
         try:
             await self.execution.wait()
             result = await self.execution.format_result(self.command)
             self.status = "done"
             self.result = result
+            logger.info(f"[bg_task] done task_id={self.task_id} code={self.execution.returncode} timed_out={self.execution.timed_out}\n{result}")
             note = f"[后台任务完成] ID: {self.task_id}{desc_line}\n{result}"
         except Exception as e:
             result = str(e)
             self.status = "error"
             self.result = result
+            logger.error(f"[bg_task] error task_id={self.task_id}{desc_line}: {e}")
             note = f"[后台任务失败] ID: {self.task_id}{desc_line}\n$ {self.command}\n{e}"
 
         task_result = {"task_id": self.task_id, "tool_name": "execute_shell", "result": result, "tool_args": {"command": self.command}}
