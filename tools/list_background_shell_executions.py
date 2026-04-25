@@ -19,5 +19,5 @@ class ListBackgroundShellExecutionsTool(FunctionTool[AstrAgentContext]):
         tasks = self.task_mgr.list_tasks()
         if not tasks:
             return "当前没有后台任务"
-        lines = [f"[{tid}] {t['status']} - {t['description'] or t['command'][:40]}" for tid, t in tasks.items()]
+        lines = [f"[{tid}] {t.status} - {t.description or t.command[:40]}" for tid, t in tasks.items()]
         return "\n".join(lines)
