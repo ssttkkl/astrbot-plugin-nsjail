@@ -9,7 +9,7 @@ from pydantic.dataclasses import dataclass
 @dataclass
 class QueryBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
     name: str = "query_background_shell_execution"
-    description: str = "查询后台任务的执行状态和结果。"
+    description: str = "查询通过 execute_shell 工具后台运行的任务的执行状态和当前输出。"
     parameters: dict = Field(default_factory=lambda: {
         "type": "object",
         "properties": {

@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 @dataclass
 class CancelBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
     name: str = "cancel_background_shell_execution"
-    description: str = "立即终止一个正在后台运行的 shell 任务。"
+    description: str = "立即终止一个通过 execute_shell 工具后台运行的 shell 任务。"
     parameters: dict = Field(default_factory=lambda: {
         "type": "object",
         "properties": {
