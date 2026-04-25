@@ -400,7 +400,7 @@ class SandboxManager:
         nsjail_cmd.extend([
             "--cwd", "/workspace",
             "--time_limit", str(timeout if timeout != -1 else 0),
-            "--rlimit_fsize", "100",
+            "--rlimit_fsize", str(self.config.file_size_limit_mb * 2048),
             "--rlimit_nofile", "1024",
         ])
         

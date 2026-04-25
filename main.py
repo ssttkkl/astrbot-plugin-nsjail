@@ -44,6 +44,7 @@ class NsjailPlugin(Star):
         custom_env = config.get("custom_env", [])
         enable_background = config.get("enable_background", True)
         background_max_timeout = config.get("background_max_timeout", 600)
+        file_size_limit_mb = config.get("file_size_limit_mb", 50)
         plugin_data_path = StarTools.get_data_dir()
         plugin_data_path.mkdir(parents=True, exist_ok=True)
 
@@ -63,6 +64,7 @@ class NsjailPlugin(Star):
             custom_env=custom_env,
             enable_background=enable_background,
             background_max_timeout=background_max_timeout,
+            file_size_limit_mb=file_size_limit_mb,
         )
 
         self.sandbox_mgr = SandboxManager(sandbox_config)

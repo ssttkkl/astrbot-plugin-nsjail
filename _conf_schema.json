@@ -133,5 +133,11 @@
     "type": "list",
     "default": ["PIPX_HOME=/data/pipx", "PIPX_BIN_DIR=/data/pipx-bin"],
     "hint": "自定义环境变量列表，格式为 KEY=VALUE，例如：[\"LANG=en_US.UTF-8\", \"TZ=Asia/Shanghai\"]"
+  },
+  "file_size_limit_mb": {
+    "description": "单文件大小限制（MB）",
+    "type": "int",
+    "default": 50,
+    "hint": "沙箱内单个文件的最大大小，对应 ulimit -f，-1 表示不限制"
   }
 }

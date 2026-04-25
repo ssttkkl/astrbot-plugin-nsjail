@@ -20,6 +20,7 @@ class SandboxConfig:
     custom_env: list[str] = field(default_factory=list)
     enable_background: bool = True
     background_max_timeout: int = 600
+    file_size_limit_mb: int = 50
 
     @property
     def skills_dir(self) -> str:
