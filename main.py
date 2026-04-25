@@ -112,7 +112,7 @@ class NsjailPlugin(Star):
         timeout = self.sandbox_mgr.config.max_timeout
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout=timeout, is_admin=is_admin)
         await execution.wait()
-        yield event.plain_result(execution.format_result(command))
+        yield event.plain_result(await execution.format_result(command))
 
     @filter.command("exec_bg")
     async def handle_exec_bg_command(self, event: AstrMessageEvent):

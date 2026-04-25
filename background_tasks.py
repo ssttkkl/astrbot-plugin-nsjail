@@ -38,7 +38,7 @@ class BackgroundTask:
         desc_line = f" ({self.description})" if self.description else ""
         try:
             await self.execution.wait()
-            result = self.execution.format_result(self.command)
+            result = await self.execution.format_result(self.command)
             self.status = "done"
             self.result = result
             note = f"[后台任务完成] ID: {self.task_id}{desc_line}\n{result}"

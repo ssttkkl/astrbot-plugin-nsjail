@@ -111,4 +111,4 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
 
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
         await execution.wait()
-        return execution.format_result(command)
+        return await execution.format_result(command)

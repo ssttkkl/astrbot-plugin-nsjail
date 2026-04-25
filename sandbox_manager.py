@@ -82,7 +82,7 @@ class Execution:
     _INLINE_LIMIT = 30 * 1024       # 30 KB
     _FILE_LIMIT   = 64 * 1024 * 1024  # 64 MB
 
-    def format_result(self, command: str) -> str:
+    async def format_result(self, command: str) -> str:
         code = self._returncode if self._returncode is not None else -1
         prefix = "执行超时，当前输出" if self._timed_out else f"退出码: {code}"
 
@@ -91,14 +91,15 @@ class Execution:
             stderr_size = os.path.getsize(self._stderr_path) if self._stderr_path and os.path.exists(self._stderr_path) else 0
             total_size = stdout_size + stderr_size
             if total_size > self._INLINE_LIMIT:
-                stdout_name = os.path.basename(self._stdout_path)
-                stderr_name = os.path.basename(self._stderr_path) if self._stderr_path else None
-                parts = [f"stdout: /tmp/tool-results/{stdout_name} ({stdout_size // 1024}KB)"]
-                if stderr_name and stderr_size > 0:
-                    parts.append(f"stderr: /tmp/tool-results/{stderr_name} ({stderr_size // 1024}KB)")
-                return f"$ {command}\n输出已写入文件（共 {total_size // 1024}KB）：\n" + "\n".join(parts) + f"\n{prefix}"
+                async def read_head(path, size) -> str:
+                    if not path or size == 0:
+                        return ""
+                    async with aiofiles.open(path, "rb") as f:
+                        return (await f.read(self._INLINE_LIMIT)).decode("utf-8", errors="replace")
+                output = await read_head(self._stdout_path, stdout_size) + await read_head(self._stderr_path, stderr_size)
+                return f"$ {command}\n{output}\n{prefix}\n输出过长，已写入文件（共 {total_size // 1024}KB）"
 
-        output = self.get_stdout() + self.get_stderr()
+        output = await self.get_stdout() + await self.get_stderr()
         return f"$ {command}\n{output}\n{prefix}"
 
     async def kill(self):
