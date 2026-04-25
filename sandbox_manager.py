@@ -400,14 +400,3 @@ class SandboxManager:
             stderr=asyncio.subprocess.PIPE,
         )
         return Execution(proc)
-
-    async def execute_in_sandbox(self, session_id: str, command: str, timeout: int = 30, is_admin: bool = False) -> tuple[str, int]:
-        try:
-            execution = await self.start_execution(session_id, command, timeout, is_admin)
-        except Exception as e:
-            return f"执行错误: {str(e)}", -1
-        try:
-            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
-        except asyncio.TimeoutError:
-            return "执行超时", -1
-        return execution.get_stdout() + execution.get_stderr(), execution.returncode

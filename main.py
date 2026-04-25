@@ -1,3 +1,4 @@
+import asyncio
 import os
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
@@ -108,7 +109,14 @@ class NsjailPlugin(Star):
 
         session_id = event.session_id or "default"
         is_admin = event.is_admin()
-        output, returncode = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout=self.sandbox_mgr.config.max_timeout, is_admin=is_admin)
+        timeout = self.sandbox_mgr.config.max_timeout
+        execution = await self.sandbox_mgr.start_execution(session_id, command, timeout=timeout, is_admin=is_admin)
+        try:
+            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
+        except asyncio.TimeoutError:
+            pass
+        output = execution.get_stdout() + execution.get_stderr()
+        returncode = execution.returncode if execution.returncode is not None else -1
 
         response = f"退出码: {returncode}\n输出:\n{output}"
         if len(response) > 2000:

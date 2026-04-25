@@ -1,3 +1,4 @@
+import asyncio
 import platform
 
 from astrbot.core.agent.tool import FunctionTool, ToolExecResult
@@ -107,5 +108,12 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
-        output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
-        return f"$ {command}\n{output}\n退出码: {code}"
+        execution = await self.sandbox_mgr.start_execution(session_id, command, timeout, is_admin)
+        try:
+            await execution.wait(timeout=None if timeout == -1 else timeout + 5)
+        except asyncio.TimeoutError:
+            pass
+        output = execution.get_stdout() + execution.get_stderr()
+        code = execution.returncode if execution.returncode is not None else -1
+        prefix = "执行超时，当前输出" if execution.returncode is None else f"退出码: {code}"
+        return f"$ {command}\n{output}\n{prefix}"
