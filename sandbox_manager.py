@@ -162,27 +162,24 @@ class SandboxManager:
         except Exception as e:
             logger.warning(f"无法检查目录权限 {path}: {e}")
     
-    def _apply_custom_mounts(self, nsjail_cmd: list, is_admin: bool):
+    def _apply_custom_mounts(self, nsjail_cmd: list, is_admin: bool, extra_mounts: list | None = None):
         """应用自定义路径映射"""
-        for mount in self.config.custom_mounts:
+        mounts = (extra_mounts or []) + list(self.config.custom_mounts)
+        for mount in mounts:
             if not isinstance(mount, dict):
                 continue
-            
+
             host_path = mount.get("host_path", "").strip()
             sandbox_path = mount.get("sandbox_path", "").strip()
             write_permission = mount.get("write_permission", "none")
-            
+
             if not host_path or not sandbox_path:
                 logger.warning(f"跳过无效的路径映射: {mount}")
                 continue
-            
-            # 变量替换
+
             host_path = host_path.replace("$(DATA)", os.path.join(self.config.data_dir, "data"))
-            
-            # 展开 ~ 为实际路径
             host_path = os.path.expanduser(host_path)
-            
-            # 如果路径不存在，自动创建
+
             if not os.path.exists(host_path):
                 try:
                     os.makedirs(host_path, exist_ok=True)
@@ -190,18 +187,16 @@ class SandboxManager:
                 except Exception as e:
                     logger.warning(f"无法创建目录 {host_path}，跳过挂载: {e}")
                     continue
-            
-            # 根据权限配置决定挂载模式
+
             mount_mode = "ro"
             if write_permission == "all":
                 mount_mode = "rw"
             elif write_permission == "admin" and is_admin:
                 mount_mode = "rw"
-            
-            # 如果是可写挂载，检查目录权限
+
             if mount_mode == "rw":
                 self._check_write_permission(host_path)
-            
+
             nsjail_cmd.extend(["--bindmount", f"{host_path}:{sandbox_path}:{mount_mode}"])
             logger.info(f"添加自定义挂载: {host_path} -> {sandbox_path} ({mount_mode})")
     
@@ -291,24 +286,18 @@ class SandboxManager:
         if not sandbox_dir or not tmp_dir:
             return "沙箱创建或获取失败，请检查系统日志。", -1
         
-        # AstrBot 技能目录
-        astrbot_skills_dir = self.config.skills_dir
-        
-        # 根据配置和用户权限决定 /data 目录挂载权限
-        data_mount_mode = "ro"
-        if self.config.data_write_permission == "all":
-            data_mount_mode = "rw"
-        elif self.config.data_write_permission == "admin" and is_admin:
-            data_mount_mode = "rw"
-        
         # 确保 data 目录存在
         data_dir = os.path.join(self.config.data_dir, "data")
         os.makedirs(data_dir, exist_ok=True)
-        
-        # 如果是可写挂载，检查目录权限
-        if data_mount_mode == "rw":
-            self._check_write_permission(data_dir)
-        
+
+        builtin_mounts = [
+            {"host_path": data_dir, "sandbox_path": "/data", "write_permission": self.config.data_write_permission},
+        ]
+        if os.path.exists(self.config.skills_dir):
+            builtin_mounts.append({"host_path": self.config.skills_dir, "sandbox_path": self.config.skills_dir, "write_permission": self.config.skills_write_permission})
+
+        # 添加自定义路径映射（含内置 data/skills）
+        self._apply_custom_mounts(nsjail_cmd, is_admin, extra_mounts=builtin_mounts)
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
@@ -350,21 +339,7 @@ class SandboxManager:
             if os.path.exists("/etc/ca-certificates"):
                 nsjail_cmd.extend(["--bindmount", "/etc/ca-certificates:/etc/ca-certificates:ro"])
         
-        # 根据配置和用户权限决定 /skills 目录挂载权限
-        skills_mount_mode = "ro"
-        if self.config.skills_write_permission == "all":
-            skills_mount_mode = "rw"
-        elif self.config.skills_write_permission == "admin" and is_admin:
-            skills_mount_mode = "rw"
-        
-        if os.path.exists(astrbot_skills_dir):
-            # 如果是可写挂载，检查目录权限
-            if skills_mount_mode == "rw":
-                self._check_write_permission(astrbot_skills_dir)
-            nsjail_cmd.extend(["--bindmount", f"{astrbot_skills_dir}:{astrbot_skills_dir}:{skills_mount_mode}"])
-        
-        # 添加自定义路径映射
-        self._apply_custom_mounts(nsjail_cmd, is_admin)
+        # 添加自定义路径映射（含内置 data/skills）
         
         nsjail_cmd.extend([
             "--cwd", "/workspace",
