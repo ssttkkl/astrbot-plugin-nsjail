@@ -5,8 +5,6 @@ from astrbot.core.astr_agent_context import AstrAgentContext
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ..background_tasks import BackgroundTaskManager
-
 
 @dataclass
 class QueryBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):

@@ -37,6 +37,6 @@ class SendSandboxImageTool(FunctionTool[AstrAgentContext]):
         astrbot_context = context.context.context
         await astrbot_context.send_message(
             event.unified_msg_origin,
-            MessageChain().message("").chain([Comp.Image(file=real_path)])
+            MessageChain().chain([Comp.Image(file=real_path)])
         )
         return "图片已发送"

@@ -47,8 +47,6 @@ class BackgroundTask:
             self.status = "error"
             self.result = result
             note = f"[后台任务失败] ID: {self.task_id}{desc_line}\n$ {self.command}\n{e}"
-        finally:
-            on_done(self.task_id)
 
         task_result = {"task_id": self.task_id, "tool_name": "execute_shell", "result": result, "tool_args": {"command": self.command}}
         session = MessageSession.from_str(event.unified_msg_origin)
@@ -69,6 +67,8 @@ class BackgroundTask:
         conv = await _get_session_conv(event=cron_event, plugin_context=astrbot_context)
         req.conversation = conv
         context = json.loads(conv.history)
+        if req.system_prompt is None:
+            req.system_prompt = ""
         if context:
             req.contexts = context
             context_dump = req._print_friendly_context()
@@ -90,11 +90,11 @@ class BackgroundTask:
             req.func_tool = ToolSet()
         req.func_tool.add_tool(SEND_MESSAGE_TO_USER_TOOL)
 
-        result_obj = await build_main_agent(event=cron_event, plugin_context=self.astrbot_context, config=config, req=req)
-        if not result_obj:
-            return
-        async for _ in result_obj.agent_runner.step_until_done(30):
-            pass
+        result_obj = await build_main_agent(event=cron_event, plugin_context=astrbot_context, config=config, req=req)
+        if result_obj:
+            async for _ in result_obj.agent_runner.step_until_done(30):
+                pass
+        on_done(self.task_id)
 
 
 class BackgroundTaskManager:

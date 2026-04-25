@@ -295,7 +295,7 @@ class SandboxManager:
         
         # 兜底检查
         if not sandbox_dir or not tmp_dir:
-            return "沙箱创建或获取失败，请检查系统日志。", -1
+            raise RuntimeError("沙箱创建或获取失败，请检查系统日志。")
         
         # 确保 data 目录存在
         data_dir = os.path.join(self.config.data_dir, "data")
