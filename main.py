@@ -1,5 +1,6 @@
 import asyncio
 import os
+import platform
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger, AstrBotConfig
@@ -54,6 +55,53 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         return f"$ {command}\n{output}\n退出码: {code}"
 
 
+def get_tool_prompt(config: SandboxConfig) -> str:
+    perm_desc = {
+        "all": "所有用户可读写",
+        "admin": "仅管理员可写，其他用户只读",
+        "none": "只读",
+    }
+    data_perm = perm_desc.get(config.data_write_permission, "只读")
+    skills_perm = perm_desc.get(config.skills_write_permission, "只读")
+    network = "已启用" if config.enable_network else "已禁用"
+    memory = f"{config.memory_limit_mb}MB" if config.memory_limit_mb > 0 else "无限制"
+    cpu = f"{config.cpu_limit_percent}%" if config.cpu_limit_percent > 0 else "无限制"
+    cpu_cores = f"{config.cpu_cores_limit}核" if config.cpu_cores_limit > 0 else "无限制"
+
+    uname = platform.uname()
+    sys_info = f"{uname.system} {uname.release} ({uname.machine})"
+
+    return f"""在隔离的沙箱环境中执行 shell 命令。
+
+宿主系统：{sys_info}
+
+🚨 上下文限制（必读）：
+每次调用都是独立的新进程，不保留任何状态：
+- ❌ 环境变量不保留：export MY_VAR=value 在下次调用时丢失
+- ❌ 工作目录不保留：cd /some/dir 在下次调用时回到 /workspace
+- ✅ 文件会保留：写入 /workspace 的文件在会话内持久化
+
+正确的多步骤写法：
+- ✅ cd /workspace/subdir && python script.py
+- ✅ export VAR=value && echo $VAR
+- ❌ 第一次调用 cd /workspace/subdir，第二次调用 python script.py
+
+沙箱目录结构：
+- /workspace: 当前会话的工作目录（可读写），命令默认在此执行
+- /data: 共享数据目录，用于跨会话持久化数据（当前权限：{data_perm}）
+  * 每个技能的持久化文件（数据、密钥、缓存等）应放在 /data/<技能名>/ 子目录下
+  * 例如：/data/weather/cache.json, /data/github/token.txt
+- {config.skills_dir}: 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm}）
+- /usr, /bin, /lib: 系统工具和库（只读），包含 Python、Node.js、Git 等
+- /tmp: 临时文件目录（可读写）
+
+资源限制：
+- 内存限制：{memory}
+- CPU 使用率：{cpu}
+- CPU 核数：{cpu_cores}
+- 网络访问：{network}"""
+
+
 class NsjailPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -99,60 +147,8 @@ class NsjailPlugin(Star):
         
         self.sandbox_mgr = SandboxManager(sandbox_config)
 
-        # 动态生成权限描述
-        data_perm_desc = {
-            "all": "所有用户可读写",
-            "admin": "仅管理员可写，其他用户只读",
-            "none": "只读"
-        }.get(data_write_permission, "只读")
-        
-        skills_perm_desc = {
-            "all": "所有用户可读写",
-            "admin": "仅管理员可写，其他用户只读",
-            "none": "只读"
-        }.get(skills_write_permission, "只读")
-        
-        network_desc = "已启用" if enable_network else "已禁用"
-        
-        # 生成资源限制描述
-        memory_desc = f"{memory_limit_mb}MB" if memory_limit_mb > 0 else "无限制"
-        cpu_desc = f"{cpu_limit_percent}%" if cpu_limit_percent > 0 else "无限制"
-        cpu_cores_desc = f"{cpu_cores_limit}核" if cpu_cores_limit > 0 else "无限制"
-        
-        # 获取实际的 skills 目录路径
-        skills_dir_path = sandbox_config.skills_dir
-        
-        tool_description = f"""在隔离的沙箱环境中执行 shell 命令。
-
-🚨 上下文限制（必读）：
-每次调用都是独立的新进程，不保留任何状态：
-- ❌ 环境变量不保留：export MY_VAR=value 在下次调用时丢失
-- ❌ 工作目录不保留：cd /some/dir 在下次调用时回到 /workspace
-- ✅ 文件会保留：写入 /workspace 的文件在会话内持久化
-
-正确的多步骤写法：
-- ✅ cd /workspace/subdir && python script.py
-- ✅ export VAR=value && echo $VAR
-- ❌ 第一次调用 cd /workspace/subdir，第二次调用 python script.py
-
-沙箱目录结构：
-- /workspace: 当前会话的工作目录（可读写），命令默认在此执行
-- /data: 共享数据目录，用于跨会话持久化数据（当前权限：{data_perm_desc}）
-  * 每个技能的持久化文件（数据、密钥、缓存等）应放在 /data/<技能名>/ 子目录下
-  * 例如：/data/weather/cache.json, /data/github/token.txt
-- {skills_dir_path}: 技能目录，可调用已安装的技能脚本（当前权限：{skills_perm_desc}）
-- /usr, /bin, /lib: 系统工具和库（只读），包含 Python、Node.js、Git 等
-- /tmp: 临时文件目录（可读写）
-
-资源限制：
-- 内存限制：{memory_desc}
-- CPU 使用率：{cpu_desc}
-- CPU 核数：{cpu_cores_desc}
-- 网络访问：{network_desc}"""
-        
-        # 注册动态 Tool
         execute_shell_tool = ExecuteShellTool(
-            description=tool_description,
+            description=get_tool_prompt(sandbox_config),
             timeout_seconds=max_timeout,
             sandbox_mgr=self.sandbox_mgr
         )
