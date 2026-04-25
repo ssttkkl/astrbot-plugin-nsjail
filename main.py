@@ -1,8 +1,9 @@
 import asyncio
 import os
 import platform
+import uuid
 from astrbot.api.star import Context, Star
-from astrbot.api.event import filter, AstrMessageEvent
+from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api import logger, AstrBotConfig
 from astrbot.api.provider import ProviderRequest
 import astrbot.api.message_components as Comp
@@ -15,44 +16,63 @@ from pydantic.dataclasses import dataclass
 from .sandbox_manager import SandboxManager
 from .sandbox_config import SandboxConfig
 
+# task_id -> {"status": "running"|"done"|"error", "command": str, "result": str}
+_bg_tasks: dict = {}
+
 
 @dataclass
 class ExecuteShellTool(FunctionTool[AstrAgentContext]):
     name: str = "execute_shell"
     description: str = ""
-    timeout_seconds: int = 60  # 默认值，实例化时会被配置覆盖
-    parameters: dict = Field(
-        default_factory=lambda: {
-            "type": "object",
-            "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "要执行的 shell 命令",
-                },
-                "timeout": {
-                    "type": "number",
-                    "description": "超时时间(秒)，默认30秒",
-                },
-            },
-            "required": ["command"],
-        }
-    )
+    timeout_seconds: int = 60
+    background_timeout_seconds: int = 600
+    enable_background: bool = True
+    parameters: dict = Field(default_factory=lambda: {
+        "type": "object",
+        "properties": {
+            "command": {"type": "string", "description": "要执行的 shell 命令"},
+            "timeout": {"type": "number", "description": "超时时间(秒)"},
+            "background": {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"},
+        },
+        "required": ["command"],
+    })
     sandbox_mgr: object = None
-    
-    async def call(
-        self, context: ContextWrapper[AstrAgentContext], **kwargs
-    ) -> ToolExecResult:
+    astrbot_context: object = None
+
+    async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
         command = kwargs.get("command", "")
         if len(command) > 65535:
             return "命令过长（最大 65535 字符）"
-        timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
-        
+
         event = context.context.event
         session_id = event.session_id or "default"
         is_admin = event.is_admin()
-        
+
+        if kwargs.get("background"):
+            if not self.enable_background:
+                return "后台模式未启用"
+            timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
+            task_id = str(uuid.uuid4())[:8]
+            _bg_tasks[task_id] = {"status": "running", "command": command, "result": None}
+            umo = event.unified_msg_origin
+            asyncio.create_task(self._run_background(task_id, session_id, command, timeout, is_admin, umo))
+            return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
+
+        timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
         return f"$ {command}\n{output}\n退出码: {code}"
+
+    async def _run_background(self, task_id, session_id, command, timeout, is_admin, umo):
+        try:
+            output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
+            result = f"$ {command}\n{output}\n退出码: {code}"
+            _bg_tasks[task_id] = {"status": "done", "command": command, "result": result}
+            text = f"[后台任务完成] ID: {task_id}\n{result}"
+        except Exception as e:
+            result = str(e)
+            _bg_tasks[task_id] = {"status": "error", "command": command, "result": result}
+            text = f"[后台任务失败] ID: {task_id}\n$ {command}\n{e}"
+        await self.astrbot_context.send_message(umo, MessageChain().message(text))
 
 
 def get_tool_prompt(config: SandboxConfig) -> str:
@@ -126,9 +146,11 @@ class NsjailPlugin(Star):
         
         path = config.get("path", None)
         custom_env = config.get("custom_env", [])
+        enable_background = config.get("enable_background", True)
+        background_max_timeout = config.get("background_max_timeout", 600)
         plugin_data_path = StarTools.get_data_dir()
         plugin_data_path.mkdir(parents=True, exist_ok=True)
-        
+
         sandbox_config = SandboxConfig(
             data_dir=str(plugin_data_path),
             max_timeout=max_timeout,
@@ -143,16 +165,39 @@ class NsjailPlugin(Star):
             sandbox_symlinks=sandbox_symlinks,
             path=path,
             custom_env=custom_env,
+            enable_background=enable_background,
+            background_max_timeout=background_max_timeout,
         )
-        
+
         self.sandbox_mgr = SandboxManager(sandbox_config)
 
         execute_shell_tool = ExecuteShellTool(
             description=get_tool_prompt(sandbox_config),
             timeout_seconds=max_timeout,
-            sandbox_mgr=self.sandbox_mgr
+            background_timeout_seconds=background_max_timeout,
+            enable_background=enable_background,
+            sandbox_mgr=self.sandbox_mgr,
+            astrbot_context=context,
         )
         self.context.add_llm_tools(execute_shell_tool)
+
+    @filter.llm_tool(name="query_background_task")
+    async def query_background_task(self, event: AstrMessageEvent, task_id: str):
+        """
+        查询后台任务的执行状态和结果。
+
+        Args:
+            task_id(string): 后台任务ID，由 execute_shell 的 background 模式返回
+        """
+        task = _bg_tasks.get(task_id)
+        if not task:
+            yield event.plain_result(f"任务 {task_id} 不存在")
+            return
+        status = task["status"]
+        if status == "running":
+            yield event.plain_result(f"任务 {task_id} 正在运行中...")
+        else:
+            yield event.plain_result(f"[任务{task_id}] 状态: {status}\n{task['result']}")
 
     _COMPUTER_USE_NOTICE = "User has not enabled the Computer Use feature. You cannot use shell or Python to perform skills. If you need to use these capabilities, ask the user to enable Computer Use in the AstrBot WebUI -> Config.\n"
 
