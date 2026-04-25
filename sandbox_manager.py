@@ -11,23 +11,37 @@ from .sandbox_config import SandboxConfig
 class Execution:
     def __init__(self, proc: asyncio.subprocess.Process, timeout: float | None = None, tmp_dir: str | None = None):
         self._proc = proc
-        self._stdout_buf = bytearray()
-        self._stderr_buf = bytearray()
         self._done = False
         self._timed_out = False
         self._returncode: int | None = None
         self._tmp_dir = tmp_dir
+        if tmp_dir:
+            results_dir = os.path.join(tmp_dir, "tool-results")
+            os.makedirs(results_dir, exist_ok=True)
+            import time
+            ts = int(time.time() * 1000)
+            self._stdout_path = os.path.join(results_dir, f"{ts}.stdout")
+            self._stderr_path = os.path.join(results_dir, f"{ts}.stderr")
+        else:
+            self._stdout_path = None
+            self._stderr_path = None
         self._reader_task = asyncio.create_task(self._read_streams(timeout))
 
     async def _read_streams(self, timeout: float | None):
-        async def drain(stream, buf):
-            if stream:
-                async for chunk in stream:
-                    buf.extend(chunk)
+        async def drain(stream, path):
+            if not stream:
+                return
+            if path:
+                with open(path, "wb") as f:
+                    async for chunk in stream:
+                        f.write(chunk)
+            else:
+                async for _ in stream:
+                    pass
         try:
             await asyncio.wait_for(asyncio.gather(
-                drain(self._proc.stdout, self._stdout_buf),
-                drain(self._proc.stderr, self._stderr_buf),
+                drain(self._proc.stdout, self._stdout_path),
+                drain(self._proc.stderr, self._stderr_path),
             ), timeout=timeout)
         except asyncio.TimeoutError:
             self._timed_out = True
@@ -35,11 +49,17 @@ class Execution:
         self._returncode = self._proc.returncode
         self._done = True
 
+    def _read_file(self, path: str | None) -> str:
+        if not path or not os.path.exists(path):
+            return ""
+        with open(path, "rb") as f:
+            return f.read().decode("utf-8", errors="replace")
+
     def get_stdout(self) -> str:
-        return self._stdout_buf.decode("utf-8", errors="replace")
+        return self._read_file(self._stdout_path)
 
     def get_stderr(self) -> str:
-        return self._stderr_buf.decode("utf-8", errors="replace")
+        return self._read_file(self._stderr_path)
 
     @property
     def returncode(self) -> int | None:
@@ -60,34 +80,23 @@ class Execution:
     _INLINE_LIMIT = 30 * 1024       # 30 KB
     _FILE_LIMIT   = 64 * 1024 * 1024  # 64 MB
 
-    @staticmethod
-    def _truncate_bytes(text: str, limit: int) -> str:
-        encoded = text.encode("utf-8")
-        if len(encoded) <= limit:
-            return text
-        half = limit // 2
-        return encoded[:half].decode("utf-8", errors="replace") + "\n...[已截断]...\n" + encoded[-half:].decode("utf-8", errors="replace")
-
     def format_result(self, command: str) -> str:
-        tmp_dir = self._tmp_dir
-        stdout = self.get_stdout()
-        stderr = self.get_stderr()
-        output = stdout + stderr
         code = self._returncode if self._returncode is not None else -1
         prefix = "执行超时，当前输出" if self._timed_out else f"退出码: {code}"
 
-        output_bytes = len(output.encode("utf-8"))
-        if output_bytes > self._INLINE_LIMIT and tmp_dir:
-            import time
-            results_dir = os.path.join(tmp_dir, "tool-results")
-            os.makedirs(results_dir, exist_ok=True)
-            filename = f"{int(time.time() * 1000)}.txt"
-            filepath = os.path.join(results_dir, filename)
-            content = output if output_bytes <= self._FILE_LIMIT else self._truncate_bytes(output, self._FILE_LIMIT)
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(content)
-            return f"$ {command}\n输出已写入 /tmp/tool-results/{filename}（{output_bytes // 1024}KB）\n{prefix}"
+        if self._stdout_path:
+            stdout_size = os.path.getsize(self._stdout_path) if os.path.exists(self._stdout_path) else 0
+            stderr_size = os.path.getsize(self._stderr_path) if self._stderr_path and os.path.exists(self._stderr_path) else 0
+            total_size = stdout_size + stderr_size
+            if total_size > self._INLINE_LIMIT:
+                stdout_name = os.path.basename(self._stdout_path)
+                stderr_name = os.path.basename(self._stderr_path) if self._stderr_path else None
+                parts = [f"stdout: /tmp/tool-results/{stdout_name} ({stdout_size // 1024}KB)"]
+                if stderr_name and stderr_size > 0:
+                    parts.append(f"stderr: /tmp/tool-results/{stderr_name} ({stderr_size // 1024}KB)")
+                return f"$ {command}\n输出已写入文件（共 {total_size // 1024}KB）：\n" + "\n".join(parts) + f"\n{prefix}"
 
+        output = self.get_stdout() + self.get_stderr()
         return f"$ {command}\n{output}\n{prefix}"
 
     async def kill(self):
