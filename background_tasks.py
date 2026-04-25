@@ -30,16 +30,16 @@ class BackgroundTask:
     asyncio_task: Optional[asyncio.Task] = field(default=None, repr=False)
     execution: Optional["Execution"] = field(default=None, repr=False)
 
-    def current_output(self) -> str:
+    async def current_output(self) -> str:
         if self.execution and self.status == "running":
-            return self.execution.get_stdout() + self.execution.get_stderr()
+            return await self.execution.get_stdout() + await self.execution.get_stderr()
         return ""
 
     async def run(self, astrbot_context, event, on_done: callable):
         from astrbot.core.astr_main_agent import MainAgentBuildConfig, _get_session_conv, build_main_agent
 
         desc_line = f" ({self.description})" if self.description else ""
-        logger.info(f"[bg_task] start task_id={self.task_id}{desc_line} cmd={self.command!r}")
+        logger.info(f"[bg_task] start task_id={self.task_id}{desc_line} cmd={self.command[:80]}")
         try:
             await self.execution.wait()
             result = await self.execution.format_result(self.command)

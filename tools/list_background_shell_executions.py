@@ -30,7 +30,7 @@ class ListBackgroundShellExecutionsTool(FunctionTool[AstrAgentContext]):
         parts = []
         for tid, t in tasks.items():
             header = f"[{tid}] {t.status} - {t.description or t.command[:40]}"
-            output = t.current_output() if t.status == "running" else (t.result or "")
+            output = await t.current_output() if t.status == "running" else (t.result or "")
             preview = _preview_output(output)
             parts.append(header + ("\n" + preview if preview else ""))
         return "\n\n".join(parts)
