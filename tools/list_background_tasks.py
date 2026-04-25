@@ -1,0 +1,21 @@
+from astrbot.core.agent.tool import FunctionTool, ToolExecResult
+from astrbot.core.agent.run_context import ContextWrapper
+from astrbot.core.astr_agent_context import AstrAgentContext
+from pydantic import Field
+from pydantic.dataclasses import dataclass
+
+from .. import background_tasks
+
+
+@dataclass
+class ListBackgroundTasksTool(FunctionTool[AstrAgentContext]):
+    name: str = "list_background_tasks"
+    description: str = "列出所有正在运行的后台任务及其状态。"
+    parameters: dict = Field(default_factory=lambda: {"type": "object", "properties": {}})
+
+    async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
+        tasks = background_tasks.list_tasks()
+        if not tasks:
+            return "当前没有后台任务"
+        lines = [f"[{tid}] {t['status']} - {t['description'] or t['command'][:40]}" for tid, t in tasks.items()]
+        return "\n".join(lines)

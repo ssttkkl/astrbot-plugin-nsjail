@@ -1,0 +1,31 @@
+from astrbot.api.event import AstrMessageEvent
+from astrbot.core.agent.tool import FunctionTool, ToolExecResult
+from astrbot.core.agent.run_context import ContextWrapper
+from astrbot.core.astr_agent_context import AstrAgentContext
+from pydantic import Field
+from pydantic.dataclasses import dataclass
+
+from .. import background_tasks
+
+
+@dataclass
+class QueryBackgroundTaskTool(FunctionTool[AstrAgentContext]):
+    name: str = "query_background_task"
+    description: str = "查询后台任务的执行状态和结果。"
+    parameters: dict = Field(default_factory=lambda: {
+        "type": "object",
+        "properties": {
+            "task_id": {"type": "string", "description": "后台任务ID，由 execute_shell 的 background 模式返回"},
+        },
+        "required": ["task_id"],
+    })
+
+    async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
+        task_id = kwargs.get("task_id", "")
+        task = background_tasks.query_task(task_id)
+        if not task:
+            return f"任务 {task_id} 不存在"
+        status = task["status"]
+        if status == "running":
+            return f"任务 {task_id} 正在运行中..."
+        return f"[任务{task_id}] 状态: {status}\n{task['result']}"
