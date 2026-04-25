@@ -3,6 +3,7 @@ import os
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api import logger, AstrBotConfig
+from astrbot.api.provider import ProviderRequest
 import astrbot.api.message_components as Comp
 from astrbot.core.agent.tool import FunctionTool, ToolExecResult
 from astrbot.core.agent.run_context import ContextWrapper
@@ -156,7 +157,13 @@ class NsjailPlugin(Star):
             sandbox_mgr=self.sandbox_mgr
         )
         self.context.add_llm_tools(execute_shell_tool)
-    
+
+    _COMPUTER_USE_NOTICE = "User has not enabled the Computer Use feature. You cannot use shell or Python to perform skills. If you need to use these capabilities, ask the user to enable Computer Use in the AstrBot WebUI -> Config.\n"
+
+    @filter.on_llm_request()
+    async def on_llm_request(self, event: AstrMessageEvent, request: ProviderRequest) -> None:
+        request.system_prompt = request.system_prompt.replace(self._COMPUTER_USE_NOTICE, "")
+
     @filter.llm_tool(name="send_sandbox_image")
     async def send_sandbox_image(self, event: AstrMessageEvent, image_path: str):
         """
