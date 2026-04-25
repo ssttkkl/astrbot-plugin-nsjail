@@ -8,7 +8,7 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from ..sandbox_config import SandboxConfig
-from .. import background_tasks
+from ..background_tasks import BackgroundTaskManager
 
 
 def get_tool_prompt(config: SandboxConfig) -> str:
@@ -84,6 +84,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
         "required": ["command"],
     })
     sandbox_mgr: object = None
+    task_mgr: object = None
 
     def __post_init__(self):
         if self.enable_background:
@@ -104,7 +105,7 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
             astrbot_context = context.context.context
-            task_id = background_tasks.create_task(self.sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, kwargs.get("description", ""))
+            task_id = self.task_mgr.create_task(self.sandbox_mgr, astrbot_context, event, session_id, command, timeout, is_admin, kwargs.get("description", ""))
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)

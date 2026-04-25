@@ -4,7 +4,7 @@ from astrbot.core.astr_agent_context import AstrAgentContext
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .. import background_tasks
+from ..background_tasks import BackgroundTaskManager
 
 
 @dataclass
@@ -19,8 +19,10 @@ class CancelBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
         "required": ["task_id"],
     })
 
+    task_mgr: object = None
+
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
         task_id = kwargs.get("task_id", "")
-        if background_tasks.cancel_task(task_id):
+        if self.task_mgr.cancel_task(task_id):
             return f"任务 {task_id} 已终止"
         return f"任务 {task_id} 不存在或已完成"

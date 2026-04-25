@@ -7,6 +7,7 @@ from astrbot.api.provider import ProviderRequest
 from astrbot.api.star import StarTools
 from .sandbox_manager import SandboxManager
 from .sandbox_config import SandboxConfig
+from .background_tasks import BackgroundTaskManager
 from .tools import (
     ExecuteShellTool,
     get_tool_prompt,
@@ -66,6 +67,7 @@ class NsjailPlugin(Star):
         )
 
         self.sandbox_mgr = SandboxManager(sandbox_config)
+        task_mgr = BackgroundTaskManager()
 
         self.context.add_llm_tools(
             ExecuteShellTool(
@@ -74,10 +76,11 @@ class NsjailPlugin(Star):
                 background_timeout_seconds=background_max_timeout,
                 enable_background=enable_background,
                 sandbox_mgr=self.sandbox_mgr,
+                task_mgr=task_mgr,
             ),
-            QueryBackgroundShellExecutionTool(),
-            ListBackgroundShellExecutionsTool(),
-            CancelBackgroundShellExecutionTool(),
+            QueryBackgroundShellExecutionTool(task_mgr=task_mgr),
+            ListBackgroundShellExecutionsTool(task_mgr=task_mgr),
+            CancelBackgroundShellExecutionTool(task_mgr=task_mgr),
             SendSandboxImageTool(sandbox_mgr=self.sandbox_mgr),
             SendSandboxFileTool(sandbox_mgr=self.sandbox_mgr),
         )

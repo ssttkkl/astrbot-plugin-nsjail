@@ -5,7 +5,7 @@ from astrbot.core.astr_agent_context import AstrAgentContext
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from .. import background_tasks
+from ..background_tasks import BackgroundTaskManager
 
 
 @dataclass
@@ -20,9 +20,11 @@ class QueryBackgroundShellExecutionTool(FunctionTool[AstrAgentContext]):
         "required": ["task_id"],
     })
 
+    task_mgr: object = None
+
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
         task_id = kwargs.get("task_id", "")
-        task = background_tasks.query_task(task_id)
+        task = self.task_mgr.query_task(task_id)
         if not task:
             return f"任务 {task_id} 不存在"
         status = task["status"]
