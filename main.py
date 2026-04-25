@@ -114,15 +114,7 @@ class NsjailPlugin(Star):
         timeout = self.sandbox_mgr.config.max_timeout
         execution = await self.sandbox_mgr.start_execution(session_id, command, timeout=timeout, is_admin=is_admin)
         await execution.wait()
-        output = execution.get_stdout() + execution.get_stderr()
-        returncode = execution.returncode if execution.returncode is not None else -1
-
-        response = f"退出码: {returncode}\n输出:\n{output}"
-        if len(response) > 2000:
-            head = response[:1000]
-            tail = response[-900:]
-            response = head + "\n...[内容已截断]...\n" + tail
-        yield event.plain_result(response)
+        yield event.plain_result(execution.format_result(command))
 
     @filter.command("nsjail-clean")
     async def handle_clean_command(self, event: AstrMessageEvent):
