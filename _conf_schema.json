@@ -125,13 +125,13 @@
   "path": {
     "description": "PATH 环境变量",
     "type": "list",
-    "default": ["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"],
+    "default": ["/data/pipx-bin", "/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"],
     "hint": "沙箱内的 PATH 环境变量，列表形式，例如：[\"/usr/local/bin\", \"/usr/bin\", \"/custom/bin\"]"
   },
   "custom_env": {
     "description": "自定义环境变量",
     "type": "list",
-    "default": [],
+    "default": ["PIPX_HOME=/data/pipx", "PIPX_BIN_DIR=/data/pipx-bin"],
     "hint": "自定义环境变量列表，格式为 KEY=VALUE，例如：[\"LANG=en_US.UTF-8\", \"TZ=Asia/Shanghai\"]"
   }
 }
