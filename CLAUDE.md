@@ -34,6 +34,17 @@ AstrBot plugin that provides secure code execution via nsjail sandboxing. Regist
 
 `data_write_permission` and `skills_write_permission` accept `"all"` / `"admin"` / `"none"`. Admin check uses `event.is_admin()` at call time, not at init.
 
+## Skills
+
+### AstrBot-Skill (`.claude/skills/AstrBot-Skill/`)
+
+Use when working on AstrBot plugin development tasks. Invoke via `Skill("AstrBot-Skill")`.
+
+- `docs/SKILL.md` — `skill-astrbot-dev`: AstrBot plugin API reference (message model, decorators/hooks, agent system, platform adapters). Start from `docs/design_standards/core_concepts.md` or `docs/index.md`.
+- `data/skills/docs4agent/SKILL.md` — `docs4agent`: technical documentation writing standards.
+
+AstrBot source code is installed at `/Users/huangwenlong/.astrbot_launcher/instances/e7afc9a0-9dad-4a35-bc3a-fc4a91a9cd14/core/` — treat it as higher authority than skill docs when they conflict.
+
 ## Development Notes
 
 - No test runner is configured. Manual testing requires a running AstrBot instance with nsjail installed.
