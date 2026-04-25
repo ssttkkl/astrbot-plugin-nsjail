@@ -3,6 +3,7 @@ import glob
 import asyncio
 import os
 import shutil
+import aiofiles
 from astrbot.api import logger
 from astrbot.core.utils.astrbot_path import get_astrbot_temp_path
 from .sandbox_config import SandboxConfig
@@ -31,13 +32,14 @@ class Execution:
         async def drain(stream, path):
             if not stream:
                 return
-            if path:
-                with open(path, "wb") as f:
-                    async for chunk in stream:
-                        f.write(chunk)
-            else:
+            if not path:
                 async for _ in stream:
                     pass
+                return
+            async with aiofiles.open(path, "wb") as f:
+                async for chunk in stream:
+                    await f.write(chunk)
+
         try:
             await asyncio.wait_for(asyncio.gather(
                 drain(self._proc.stdout, self._stdout_path),
@@ -49,17 +51,17 @@ class Execution:
         self._returncode = self._proc.returncode
         self._done = True
 
-    def _read_file(self, path: str | None) -> str:
+    async def _read_file(self, path: str | None) -> str:
         if not path or not os.path.exists(path):
             return ""
-        with open(path, "rb") as f:
-            return f.read().decode("utf-8", errors="replace")
+        async with aiofiles.open(path, "rb") as f:
+            return (await f.read()).decode("utf-8", errors="replace")
 
-    def get_stdout(self) -> str:
-        return self._read_file(self._stdout_path)
+    async def get_stdout(self) -> str:
+        return await self._read_file(self._stdout_path)
 
-    def get_stderr(self) -> str:
-        return self._read_file(self._stderr_path)
+    async def get_stderr(self) -> str:
+        return await self._read_file(self._stderr_path)
 
     @property
     def returncode(self) -> int | None:
