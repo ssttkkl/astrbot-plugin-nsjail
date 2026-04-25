@@ -34,6 +34,11 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
     })
     sandbox_mgr: object = None
 
+    def __post_init__(self):
+        if self.enable_background:
+            self.parameters["properties"]["background"] = {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"}
+            self.parameters["properties"]["description"] = {"type": "string", "description": "后台任务的简短描述（后台模式必填），用于后续识别"}
+
     async def call(self, context: ContextWrapper[AstrAgentContext], **kwargs) -> ToolExecResult:
         command = kwargs.get("command", "")
         if len(command) > 65535:
@@ -160,9 +165,6 @@ class NsjailPlugin(Star):
             sandbox_mgr=self.sandbox_mgr,
         )
         self.context.add_llm_tools(execute_shell_tool)
-        if enable_background:
-            execute_shell_tool.parameters["properties"]["background"] = {"type": "boolean", "description": "是否在后台运行，完成后自动将结果发送到会话"}
-            execute_shell_tool.parameters["properties"]["description"] = {"type": "string", "description": "后台任务的简短描述（后台模式必填），用于后续识别"}
 
     @filter.llm_tool(name="query_background_task")
     async def query_background_task(self, event: AstrMessageEvent, task_id: str):
