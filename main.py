@@ -1,7 +1,6 @@
 import asyncio
 import os
 import platform
-import uuid
 from astrbot.api.star import Context, Star
 from astrbot.api.event import filter, AstrMessageEvent, MessageChain
 from astrbot.api import logger, AstrBotConfig
@@ -15,9 +14,7 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 from .sandbox_manager import SandboxManager
 from .sandbox_config import SandboxConfig
-
-# task_id -> {"status": "running"|"done"|"error", "command": str, "result": str}
-_bg_tasks: dict = {}
+from . import background_tasks
 
 
 @dataclass
@@ -52,27 +49,12 @@ class ExecuteShellTool(FunctionTool[AstrAgentContext]):
             if not self.enable_background:
                 return "后台模式未启用"
             timeout = min(kwargs.get("timeout", self.background_timeout_seconds), self.background_timeout_seconds)
-            task_id = str(uuid.uuid4())[:8]
-            _bg_tasks[task_id] = {"status": "running", "command": command, "result": None}
-            umo = event.unified_msg_origin
-            asyncio.create_task(self._run_background(task_id, session_id, command, timeout, is_admin, umo))
+            task_id = background_tasks.create_task(self.sandbox_mgr, self.astrbot_context, session_id, command, timeout, is_admin, event.unified_msg_origin)
             return f"命令已在后台运行，任务ID: {task_id}，完成后将自动发送结果到会话。"
 
         timeout = min(kwargs.get("timeout", self.timeout_seconds), self.timeout_seconds)
         output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
         return f"$ {command}\n{output}\n退出码: {code}"
-
-    async def _run_background(self, task_id, session_id, command, timeout, is_admin, umo):
-        try:
-            output, code = await self.sandbox_mgr.execute_in_sandbox(session_id, command, timeout, is_admin)
-            result = f"$ {command}\n{output}\n退出码: {code}"
-            _bg_tasks[task_id] = {"status": "done", "command": command, "result": result}
-            text = f"[后台任务完成] ID: {task_id}\n{result}"
-        except Exception as e:
-            result = str(e)
-            _bg_tasks[task_id] = {"status": "error", "command": command, "result": result}
-            text = f"[后台任务失败] ID: {task_id}\n$ {command}\n{e}"
-        await self.astrbot_context.send_message(umo, MessageChain().message(text))
 
 
 def get_tool_prompt(config: SandboxConfig) -> str:
@@ -189,7 +171,7 @@ class NsjailPlugin(Star):
         Args:
             task_id(string): 后台任务ID，由 execute_shell 的 background 模式返回
         """
-        task = _bg_tasks.get(task_id)
+        task = background_tasks.query_task(task_id)
         if not task:
             yield event.plain_result(f"任务 {task_id} 不存在")
             return
