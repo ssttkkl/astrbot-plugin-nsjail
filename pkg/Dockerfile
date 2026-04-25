@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 第2层：安装 JRE、字体、ffmpeg 和 pipx
+# 第2层：安装 JRE、字体和 ffmpeg
 RUN apt-get update && apt-get install -y \
     openjdk-21-jre-headless \
     fonts-wqy-microhei \
@@ -26,7 +26,6 @@ RUN apt-get update && apt-get install -y \
     fonts-noto-cjk \
     fontconfig \
     ffmpeg \
-    pipx \
     && fc-cache -fv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -42,7 +41,7 @@ ENV LANG=zh_CN.UTF-8 \
     LC_ALL=zh_CN.UTF-8
 
 # 第4层：安装 Python 工具和 Playwright
-RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv \
+RUN apt-get update && apt-get install -y python3-virtualenv python3.13-venv pipx \
     && pip3 install --no-cache-dir --break-system-packages uv pdm poetry \
     && pip3 install --no-cache-dir --break-system-packages playwright \
     && playwright install --with-deps chromium \
