@@ -5,6 +5,18 @@
     "default": 60,
     "hint": "工具执行的最大超时时间，工具参数指定的超时不能超过此值"
   },
+  "enable_background": {
+    "description": "是否启用后台执行模式",
+    "type": "bool",
+    "default": true,
+    "hint": "启用后 AI 可通过 execute_shell 工具在后台运行命令，完成后自动将结果发送到会话"
+  },
+  "background_max_timeout": {
+    "description": "后台任务最大超时时间（秒）",
+    "type": "int",
+    "default": 600,
+    "hint": "后台执行模式的最大超时时间，-1 表示不限制"
+  },
   "enable_network": {
     "description": "是否允许沙箱访问网络",
     "type": "bool",
