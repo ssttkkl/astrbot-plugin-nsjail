@@ -38,6 +38,6 @@ class SendSandboxFileTool(FunctionTool[AstrAgentContext]):
         astrbot_context = context.context.context
         await astrbot_context.send_message(
             event.unified_msg_origin,
-            MessageChain().chain([Comp.File(file=real_path, name=file_name)])
+            MessageChain([Comp.File(file=real_path, name=file_name)])
         )
         return "文件已发送"
