@@ -47,6 +47,18 @@
     "default": 50,
     "hint": "沙箱可创建的最大进程数，-1 表示不限制，正整数表示限制的进程数"
   },
+  "sandbox_uid": {
+    "description": "沙箱运行 UID",
+    "type": "int",
+    "default": 65534,
+    "hint": "nsjail 内进程使用的非 root UID。默认 65534（nobody）兼容性较好；如环境允许也可设为 99999"
+  },
+  "sandbox_gid": {
+    "description": "沙箱运行 GID",
+    "type": "int",
+    "default": 65534,
+    "hint": "nsjail 内进程使用的非 root GID。默认 65534（nogroup/nobody）兼容性较好；如环境允许也可设为 99999"
+  },
   "file_size_limit_mb": {
     "description": "单文件大小限制（MB）",
     "type": "int",

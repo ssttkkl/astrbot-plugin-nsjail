@@ -68,6 +68,8 @@ brew install nsjail
 | cpu_limit_percent | int | -1 | CPU 限制（%），-1 不限制 |
 | cpu_cores_limit | int | -1 | CPU 核数限制，-1 不限制 |
 | process_limit | int | 50 | 进程数限制 |
+| sandbox_uid | int | 65534 | 沙箱进程 UID |
+| sandbox_gid | int | 65534 | 沙箱进程 GID |
 | data_write_permission | string | "none" | /data 写权限（all/admin/none） |
 | skills_write_permission | string | "none" | /skills 写权限（all/admin/none） |
 | path | list | [默认PATH] | PATH 环境变量 |
@@ -242,7 +244,7 @@ A: Astrbot 当未开启“使用电脑能力”功能时，会在系统提示词
 | 进程 | PID namespace | 无法看到其他进程 |
 | 网络 | Network namespace | 默认断网，可选启用 |
 | 资源 | Cgroup V2 + rlimit | 内存/CPU/进程限制 |
-| 用户 | UID 99999 | 非 root 运行 |
+| 用户 | 可配置 UID/GID，默认 65534 | 非 root 运行 |
 
 ### 软件复用原理
 

@@ -12,12 +12,23 @@ logger = logging.getLogger(__name__)
 
 from astrbot.core.astr_main_agent_resources import (
     BACKGROUND_TASK_RESULT_WOKE_SYSTEM_PROMPT,
-    SEND_MESSAGE_TO_USER_TOOL,
 )
 from astrbot.core.cron.events import CronMessageEvent
 from astrbot.core.platform.astr_message_event import MessageSession
 from astrbot.core.provider.entities import ProviderRequest
 from astrbot.core.agent.tool import ToolSet
+
+
+def _create_send_message_to_user_tool():
+    """Return AstrBot's built-in send_message_to_user tool across API versions."""
+    try:
+        from astrbot.core.tools.message_tools import SendMessageToUserTool
+
+        return SendMessageToUserTool()
+    except ImportError:
+        from astrbot.core.astr_main_agent_resources import SEND_MESSAGE_TO_USER_TOOL
+
+        return SEND_MESSAGE_TO_USER_TOOL
 
 
 @dataclass
@@ -94,7 +105,7 @@ class BackgroundTask:
         )
         if not req.func_tool:
             req.func_tool = ToolSet()
-        req.func_tool.add_tool(SEND_MESSAGE_TO_USER_TOOL)
+        req.func_tool.add_tool(_create_send_message_to_user_tool())
 
         result_obj = await build_main_agent(event=cron_event, plugin_context=astrbot_context, config=config, req=req)
         if result_obj:
