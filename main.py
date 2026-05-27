@@ -28,6 +28,8 @@ class NsjailPlugin(Star):
         cpu_limit_percent = config.get("cpu_limit_percent", -1)
         cpu_cores_limit = config.get("cpu_cores_limit", -1)
         process_limit = config.get("process_limit", 50)
+        sandbox_uid = config.get("sandbox_uid", 65534)
+        sandbox_gid = config.get("sandbox_gid", 65534)
         data_write_permission = config.get("data_write_permission", "none")
         skills_write_permission = config.get("skills_write_permission", "none")
         custom_mounts = config.get("custom_mounts", [])
@@ -56,6 +58,8 @@ class NsjailPlugin(Star):
             cpu_limit_percent=cpu_limit_percent,
             cpu_cores_limit=cpu_cores_limit,
             process_limit=process_limit,
+            sandbox_uid=sandbox_uid,
+            sandbox_gid=sandbox_gid,
             data_write_permission=data_write_permission,
             skills_write_permission=skills_write_permission,
             custom_mounts=custom_mounts,

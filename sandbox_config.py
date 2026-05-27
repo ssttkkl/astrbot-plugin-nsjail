@@ -12,6 +12,8 @@ class SandboxConfig:
     cpu_limit_percent: int = -1
     cpu_cores_limit: int = -1
     process_limit: int = 50
+    sandbox_uid: int = 65534
+    sandbox_gid: int = 65534
     data_write_permission: str = "none"
     skills_write_permission: str = "none"
     custom_mounts: list[dict] = field(default_factory=list)

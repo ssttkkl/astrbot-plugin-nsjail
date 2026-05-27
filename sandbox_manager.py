@@ -165,12 +165,17 @@ class SandboxManager:
         os.makedirs(tmp_dir, exist_ok=True)
         
         try:
-            os.chown(sandbox_dir, 99999, 99999)
+            os.chown(sandbox_dir, self.config.sandbox_uid, self.config.sandbox_gid)
             os.chmod(sandbox_dir, 0o755)
-            os.chown(tmp_dir, 99999, 99999)
+            os.chown(tmp_dir, self.config.sandbox_uid, self.config.sandbox_gid)
             os.chmod(tmp_dir, 0o755)
         except Exception as e:
-            logger.warning(f'设置目录权限失败: {e}')
+            logger.warning(f'设置目录所有者失败: {e}，将回退为仅当前沙箱目录开放写入权限')
+            try:
+                os.chmod(sandbox_dir, 0o777)
+                os.chmod(tmp_dir, 0o777)
+            except Exception as chmod_error:
+                logger.warning(f'设置目录权限失败: {chmod_error}')
         
         # 创建符号链接
         self._create_sandbox_symlinks(sandbox_dir)
@@ -217,11 +222,14 @@ class SandboxManager:
                     logger.warning(f'符号链接目标已存在，跳过: {target_path}')
     
     def _check_write_permission(self, path: str):
-        """检查目录是否有 UID 99999 的写入权限"""
+        """检查目录是否有沙箱用户的写入权限"""
         try:
             stat_info = os.stat(path)
-            if stat_info.st_uid != 99999 and not (stat_info.st_mode & 0o002):
-                logger.warning(f"目录 {path} 可能没有 UID 99999 的写入权限，如果遇到权限错误，请执行: chown -R 99999:99999 {path}")
+            if stat_info.st_uid != self.config.sandbox_uid and not (stat_info.st_mode & 0o002):
+                logger.warning(
+                    f"目录 {path} 可能没有 UID {self.config.sandbox_uid} 的写入权限，"
+                    f"如果遇到权限错误，请执行: chown -R {self.config.sandbox_uid}:{self.config.sandbox_gid} {path}"
+                )
         except Exception as e:
             logger.warning(f"无法检查目录权限 {path}: {e}")
     
@@ -362,8 +370,8 @@ class SandboxManager:
         nsjail_cmd = [
             "nsjail",
             "--mode", "o",
-            "--user", "99999",
-            "--group", "99999",
+            "--user", str(self.config.sandbox_uid),
+            "--group", str(self.config.sandbox_gid),
             "--disable_clone_newuser",
             "--bindmount", f"{sandbox_dir}:/workspace:rw",
             "--bindmount", "/usr:/usr:ro",
