@@ -1,4 +1,4 @@
-FROM soulter/astrbot:latest
+FROM soulter/astrbot:v4.25.3
 
 # 第1层：安装 nsjail（编译耗时，很少变动）
 RUN apt-get update && apt-get install -y \
